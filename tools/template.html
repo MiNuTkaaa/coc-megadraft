@@ -1,0 +1,681 @@
+<title>Megadraft Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: lobby (create / join with Town Hall filter) -> room: status bar, two rosters, shared pool grid, sticky lock-in bar. */
+:root {
+  --bg: #eef1f4; --panel: #ffffff; --panel2: #e3e8ee; --fg: #17202b; --muted: #5b6878;
+  --line: #cfd7e0; --accent: #c8501e; --accent-fg: #ffffff;
+  --a: #1f6fd1; --a-soft: #dce9fa; --b: #b2287a; --b-soft: #f6dcec;
+  --ok: #1d7a45; --warn: #a86a00; --bad: #b3261e;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161c; --panel: #1b2129; --panel2: #232b35; --fg: #e8edf3; --muted: #95a2b3;
+  --line: #2e3844; --accent: #f07a42; --accent-fg: #1a0d05;
+  --a: #6aa8ff; --a-soft: #1c2e4a; --b: #f07ac0; --b-soft: #45203a;
+  --ok: #4fc483; --warn: #e3a63a; --bad: #ff7a70; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12161c; --panel: #1b2129; --panel2: #232b35; --fg: #e8edf3; --muted: #95a2b3;
+  --line: #2e3844; --accent: #f07a42; --accent-fg: #1a0d05;
+  --a: #6aa8ff; --a-soft: #1c2e4a; --b: #f07ac0; --b-soft: #45203a;
+  --ok: #4fc483; --warn: #e3a63a; --bad: #ff7a70; color-scheme: dark }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.45 }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 14px 110px }
+header.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px }
+header.top h1 { font-family: var(--display); font-weight: 800; font-size: 22px; margin: 0; letter-spacing: -.01em }
+header.top h1 a { color: inherit; text-decoration: none }
+.mode { font-size: 12px; padding: 3px 8px; border-radius: 99px; background: var(--panel2); color: var(--muted) }
+.mode.live { color: var(--ok) }
+.spacer { flex: 1 }
+h2 { font-family: var(--display); font-weight: 600; font-size: 18px; margin: 0 0 10px; text-wrap: balance }
+h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; font-weight: 600 }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+@media (max-width: 720px) { .grid2 { grid-template-columns: 1fr } }
+.stack { display: flex; flex-direction: column; gap: 12px }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+button, .btn { font: inherit; font-weight: 600; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); padding: 8px 12px; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block }
+button:hover, .btn:hover { border-color: var(--muted) }
+.primary { background: var(--accent) !important; border-color: var(--accent) !important; color: var(--accent-fg) !important }
+button.danger { color: var(--bad) }
+button:disabled { opacity: .45; cursor: not-allowed }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+input, select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; min-width: 0 }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0 }
+.muted { color: var(--muted) } .small { font-size: 12px }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums }
+.list { display: flex; flex-direction: column; gap: 6px }
+.mrow { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: inherit; flex-wrap: wrap; text-decoration: none }
+.mrow:hover { border-color: var(--muted) }
+.pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--panel2); color: var(--muted); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap }
+.pill.lobby { color: var(--ok) } .pill.draft { color: var(--accent) } .pill.attack { color: var(--warn) }
+.th { font-family: var(--mono); font-size: 12px; font-weight: 500; padding: 2px 7px; border-radius: 6px; background: var(--fg); color: var(--bg); white-space: nowrap }
+.seatA { color: var(--a) } .seatB { color: var(--b) }
+.hero { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px }
+@media (max-width: 560px) { .hero { grid-template-columns: 1fr } }
+.bigbtn { display: flex; flex-direction: column; gap: 4px; padding: 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); text-decoration: none }
+.bigbtn b { font-family: var(--display); font-size: 22px; font-weight: 800 }
+.bigbtn:hover { border-color: var(--accent) }
+.bigbtn.go { background: var(--accent); border-color: var(--accent); color: var(--accent-fg) }
+.bigbtn.go .muted { color: inherit; opacity: .85 }
+.chips { display: flex; gap: 6px; flex-wrap: wrap }
+.chips button { padding: 5px 10px; font-size: 13px }
+.chips button.on { background: var(--fg); color: var(--bg); border-color: var(--fg) }
+.status { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); margin-bottom: 12px }
+.status.turnA { border-color: var(--a); box-shadow: inset 4px 0 0 var(--a) }
+.status.turnB { border-color: var(--b); box-shadow: inset 4px 0 0 var(--b) }
+.status .who { font-family: var(--display); font-size: 20px; font-weight: 800 }
+.clock { font-family: var(--mono); font-size: 22px; font-variant-numeric: tabular-nums }
+.clock.low { color: var(--bad) }
+.steps { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px }
+.steps span { font-size: 12px; padding: 4px 10px; border-radius: 99px; background: var(--panel2); color: var(--muted) }
+.steps span.on { background: var(--accent); color: var(--accent-fg) }
+.roster { border-top: 3px solid var(--a) } .roster.B { border-top-color: var(--b) }
+.roster .head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px }
+.roster .name { font-family: var(--display); font-weight: 800; font-size: 18px }
+.cat { display: grid; grid-template-columns: 92px 1fr; gap: 6px; align-items: start; padding: 5px 0; border-top: 1px dashed var(--line) }
+.cat:first-of-type { border-top: 0 }
+.cat .lab { font-size: 12px; color: var(--muted); padding-top: 4px }
+.slots { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0 }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 7px 2px 2px; border-radius: 6px; background: var(--panel2) }
+.chip img { width: 22px; height: 22px; object-fit: contain }
+.chip.empty { padding: 2px 7px; border: 1px dashed var(--line); background: transparent; color: var(--muted); min-height: 26px }
+.chip.last { outline: 2px solid var(--accent) }
+.pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px }
+@media (max-width: 480px) { .pool { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)) } }
+.tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); text-align: center; font-weight: 500; font-size: 12px; line-height: 1.2; min-height: 104px; font-family: var(--body) }
+.tile .pic { width: 52px; height: 52px; object-fit: contain }
+.tile .hs { font-size: 10px; color: var(--muted); font-family: var(--mono) }
+.tile .herotag { position: absolute; top: 4px; left: 4px; width: 22px; height: 22px; border-radius: 5px; object-fit: cover }
+.tile.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) }
+.tile.takenA { background: var(--a-soft); border-color: var(--a) }
+.tile.takenB { background: var(--b-soft); border-color: var(--b) }
+.tile.takenA .pic, .tile.takenB .pic { filter: grayscale(.85); opacity: .55 }
+.tile.blocked:not(.takenA):not(.takenB) { opacity: .4 }
+.tile .own { position: absolute; top: 4px; right: 5px; font-size: 11px; font-weight: 800 }
+.sectionlab { grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 6px; font-weight: 600 }
+.lockbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 5 }
+.log { max-height: 260px; overflow: auto; font-size: 12px }
+.log div { padding: 3px 0; border-bottom: 1px solid var(--line) }
+.note { font-size: 12px; padding: 8px 10px; border-radius: 8px; background: var(--panel2); color: var(--muted) }
+.err { color: var(--bad); font-size: 13px }
+.toast { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 8px; z-index: 20; font-weight: 600; max-width: calc(100% - 32px) }
+.win { font-family: var(--display); font-size: 22px; font-weight: 800 }
+.heroes { display: flex; gap: 6px; flex-wrap: wrap }
+.heroes img { width: 30px; height: 30px; border-radius: 6px }
+@media (prefers-reduced-motion: no-preference) { .tile { transition: transform .08s } .tile:active { transform: scale(.97) } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1><a href="#">Megadraft</a></h1>
+    <span id="mode" class="mode">Connecting…</span>
+  </header>
+  <main id="app"><p class="muted">Loading…</p></main>
+</div>
+<div id="lockbar" class="lockbar" hidden></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/{};
+const ITEMS = DATA.items, HEROES = DATA.heroes;
+const BYID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const CATS = [
+  { k: "troop", label: "Troops" }, { k: "super", label: "Super troops" },
+  { k: "spell", label: "Spells" }, { k: "siege", label: "Siege machines" }, { k: "epic", label: "Epic equipment" }];
+const TH_LEVELS = [12, 13, 14, 15, 16, 17, 18];
+const EPICS_PER_HERO = 2;
+const DEFAULT_SETTINGS = { troops: 7, supers: 2, spells: 4, sieges: 1, epics: 4, timer: 60 };
+const DEFAULT_POOL = { troop: 15, super: 6, spell: 12, siege: 4, epic: 12 };
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const img = (it, cls = "pic") => `<img class="${cls}" src="${it.img}" alt="" loading="lazy" decoding="async">`;
+const other = s => s === "A" ? "B" : "A";
+const now = () => Date.now();
+const CLIENT = Math.random().toString(36).slice(2);
+function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v) } catch (e) { return null } }
+
+/* ---------- rules (pure) ---------- */
+const perPlayer = st => st.troops + st.spells + st.sieges + st.epics;
+const totalPicks = r => 2 * perPlayer(r.settings);
+function seatForPick(r, i) { const F = r.first, O = other(F); if (i === 0) return F; return Math.floor((i - 1) / 2) % 2 === 0 ? O : F }
+const picksOf = (r, seat) => r.picks.filter(p => p.seat === seat).map(p => BYID[p.id]).filter(Boolean);
+function counts(r, seat) {
+  const c = { troop: 0, super: 0, spell: 0, siege: 0, epic: 0, hero: {} };
+  for (const it of picksOf(r, seat)) { c[it.c]++; if (it.c === "epic") c.hero[it.h] = (c.hero[it.h] || 0) + 1 }
+  return c;
+}
+function whyIllegal(r, seat, it) {
+  if (!r.pool.includes(it.id)) return "Not in this room's pool";
+  if (r.picks.some(p => p.id === it.id)) return "Already taken";
+  const s = r.settings, c = counts(r, seat);
+  if (it.c === "troop" || it.c === "super") {
+    if (c.troop + c.super >= s.troops) return `Troop slots full (${s.troops})`;
+    if (it.c === "super" && c.super >= s.supers) return `Super troop limit reached (${s.supers})`;
+  }
+  if (it.c === "spell" && c.spell >= s.spells) return `Spell slots full (${s.spells})`;
+  if (it.c === "siege" && c.siege >= s.sieges) return `Siege slot full (${s.sieges})`;
+  if (it.c === "epic") {
+    if (c.epic >= s.epics) return `Equipment slots full (${s.epics})`;
+    if ((c.hero[it.h] || 0) >= EPICS_PER_HERO) return `${HEROES[it.h].n} already has ${EPICS_PER_HERO} epics`;
+  }
+  return "";
+}
+const legalItems = (r, seat) => r.pool.map(id => BYID[id]).filter(it => it && !whyIllegal(r, seat, it));
+function deadline(r) { if (!r.settings.timer || r.phase !== "draft" || r.paused || !r.turnStart) return null; return r.turnStart + r.settings.timer * 1000 }
+function applyPick(r, id, auto) {
+  const i = r.picks.length;
+  if (r.phase !== "draft" || i >= totalPicks(r)) return null;
+  const seat = seatForPick(r, i), it = BYID[id];
+  if (!it || whyIllegal(r, seat, it)) return null;
+  r.picks = [...r.picks, { id, seat, auto: !!auto, at: now() }];
+  r.turnStart = now();
+  if (r.picks.length >= totalPicks(r)) { r.phase = "attack"; r.turnStart = null }
+  return r;
+}
+function winner(r) {
+  const a = r.results?.A, b = r.results?.B; if (!a || !b) return null;
+  for (const k of ["stars", "pct", "time"]) { if (+a[k] > +b[k]) return "A"; if (+b[k] > +a[k]) return "B" }
+  return "tie";
+}
+function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
+const eligible = (th, c) => ITEMS.filter(i => i.c === c && i.th <= th);
+// Deal a limited random pool so armies have to overlap. Troops always include some air and some ground.
+function genPool(th, size) {
+  const out = [];
+  for (const c of ["troop", "super", "spell", "siege", "epic"]) {
+    const el = shuffle(eligible(th, c)), n = Math.min(size[c], el.length);
+    if (c === "troop") {
+      const air = el.filter(i => i.fly), ground = el.filter(i => !i.fly);
+      const pick = [...air.slice(0, Math.min(3, Math.ceil(n / 4))), ...ground.slice(0, Math.min(5, Math.ceil(n / 2)))];
+      const rest = el.filter(i => !pick.includes(i));
+      out.push(...[...pick, ...rest].slice(0, n).map(i => i.id));
+    } else out.push(...el.slice(0, n).map(i => i.id));
+  }
+  return out;
+}
+function poolProblem(th, size, st) {
+  const have = c => Math.min(size[c], eligible(th, c).length);
+  if (st.supers > st.troops) return "Super troops can't exceed troop picks.";
+  if (have("troop") + Math.min(have("super"), 2 * st.supers) < 2 * st.troops) return `The pool needs at least ${2 * st.troops} troops counting up to ${2 * st.supers} supers, so both players can fill ${st.troops} slots.`;
+  if (have("spell") < 2 * st.spells) return `The pool needs at least ${2 * st.spells} spells.`;
+  if (have("siege") < 2 * st.sieges) return `The pool needs at least ${2 * st.sieges} siege machines.`;
+  if (have("epic") < 2 * st.epics) return `The pool needs at least ${2 * st.epics} epic equipment.`;
+  return "";
+}
+
+/* ---------- store: live shared rooms, or this device only ---------- */
+const Store = {
+  live: false, db: null, uid: null, isOwner: false, rooms: {}, listeners: [], loaded: false,
+  emit() { this.listeners.forEach(f => f()) },
+  async init() {
+    try {
+      if (window.claude?.use) {
+        const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+        if (db) { this.db = db; this.live = true; this.uid = user ? await user.id() : null; this.isOwner = user ? !!(await user.isOwner()) : false }
+      }
+    } catch (e) { this.live = false }
+    if (!this.live) {
+      try { this.rooms = JSON.parse(ls("megadraft-rooms") || "{}") } catch (e) { this.rooms = {} }
+      this.uid = "local"; this.isOwner = true; this.loaded = true; this.emit(); return;
+    }
+    const t = setTimeout(() => { if (!this.loaded) toast("Can't reach the rooms yet. Retrying…") }, 10000);
+    this.db.collection("rooms").onSnapshot(snap => {
+      this.loaded = true; clearTimeout(t);
+      const o = {}; snap.docs.forEach(d => { if (d.exists) o[d.id] = d.data() }); this.rooms = o; this.emit();
+    }, () => toast("Rooms stopped updating. Reload the page."));
+  },
+  persist() { if (!this.live) ls("megadraft-rooms", JSON.stringify(this.rooms)) },
+  async create(r) {
+    const id = "r" + now().toString(36) + Math.random().toString(36).slice(2, 5);
+    if (!this.live) { this.rooms[id] = r; this.persist(); this.emit(); return id }
+    await this.db.doc("rooms/" + id).set(r); return id;
+  },
+  async remove(id) { if (!this.live) { delete this.rooms[id]; this.persist(); this.emit(); return } await this.db.doc("rooms/" + id).delete() },
+  async mutate(id, fn) {
+    if (!this.live) {
+      const cur = this.rooms[id]; if (!cur) return false;
+      const next = fn(structuredClone(cur)); if (!next) return false;
+      this.rooms[id] = next; this.persist(); this.emit(); return true;
+    }
+    const ref = this.db.doc("rooms/" + id);
+    let got = false;
+    for (let k = 0; k < 8 && !got; k++) {
+      try { got = (await ref.acquire({ holder: CLIENT, ttlMs: 4000 })).acquired } catch (e) { break }
+      if (!got) await new Promise(res => setTimeout(res, 250 + Math.random() * 250));
+    }
+    const snap = await ref.get(); if (!snap.exists) return false;
+    const next = fn(structuredClone(snap.data())); if (!next) return false;
+    await ref.set(next); return true;
+  },
+};
+
+/* ---------- roles ---------- */
+const mySeats = r => !Store.live ? ["A", "B"].filter(s => r.players[s] && !r.players[s].bot) : ["A", "B"].filter(s => Store.uid && r.players[s]?.uid === Store.uid);
+const isHost = r => !Store.live || (Store.uid && r.hostUid === Store.uid);
+const isMod = () => !Store.live || Store.isOwner;
+const canActFor = (r, seat) => mySeats(r).includes(seat);
+
+/* ---------- UI shell ---------- */
+const ui = { tab: "all", sel: null, q: "", busy: false, thFilter: ls("megadraft-th") || "all" };
+let toastT;
+function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2800) }
+const app = document.getElementById("app");
+function route() {
+  const h = location.hash.slice(1);
+  if (h.startsWith("r-")) return { v: "room", id: h.slice(2) };
+  if (h === "create" || h === "join") return { v: h };
+  return { v: "home" };
+}
+let pendingRender = false;
+function render(force) {
+  const ae = document.activeElement;
+  if (!force && ae && app.contains(ae) && ["INPUT", "SELECT", "TEXTAREA"].includes(ae.tagName)) { pendingRender = true; return }
+  pendingRender = false;
+  const mode = document.getElementById("mode");
+  mode.textContent = Store.live ? "Live rooms" : "This device only";
+  mode.className = "mode" + (Store.live ? " live" : "");
+  document.getElementById("lockbar").hidden = true;
+  const r = route();
+  if (r.v === "room") return renderRoom(r.id);
+  if (r.v === "create") return renderCreate();
+  if (r.v === "join") return renderJoin();
+  renderHome();
+}
+app.addEventListener("focusout", () => setTimeout(() => { if (pendingRender) render() }, 0));
+window.addEventListener("hashchange", () => { ui.sel = null; ui.tab = "all"; ui.q = ""; render(true); window.scrollTo(0, 0) });
+const phaseLabel = p => ({ lobby: "Waiting", draft: "Drafting", attack: "Attacks", done: "Finished" }[p] || p);
+const roomsList = () => Object.entries(Store.rooms).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+function roomRow([id, r], cta) {
+  const open = r.phase === "lobby" && !r.players.B;
+  return `<a class="mrow" href="#r-${id}">
+    <span class="th">TH${r.th}</span>
+    <strong>${esc(r.name)}</strong>
+    <span class="small"><span class="seatA">${esc(r.players.A?.name)}</span>${r.players.B ? ` vs <span class="seatB">${esc(r.players.B.name)}</span>` : ` <span class="muted">waiting for an opponent</span>`}</span>
+    <span class="spacer"></span>
+    <span class="muted small">${r.settings.troops}T · ${r.settings.spells}S · ${r.settings.sieges} siege · ${r.settings.epics}E${r.settings.timer ? ` · ${r.settings.timer}s` : ""}</span>
+    ${r.practice ? `<span class="pill">Practice</span>` : ""}<span class="pill ${r.phase}">${open ? (cta || "Open seat") : phaseLabel(r.phase)}</span>
+  </a>`;
+}
+
+/* ---------- home ---------- */
+function renderHome() {
+  const all = roomsList();
+  const mine = all.filter(([, r]) => Store.live && (r.hostUid === Store.uid || mySeats(r).length));
+  const openCount = all.filter(([, r]) => r.phase === "lobby" && !r.players.B).length;
+  app.innerHTML = `
+    <div class="hero">
+      <a class="bigbtn go" href="#create"><b>Create room</b><span class="muted">Set the Town Hall and pick limits, then wait for an opponent.</span></a>
+      <a class="bigbtn" href="#join"><b>Join room</b><span class="muted">${openCount} room${openCount === 1 ? "" : "s"} waiting for an opponent.</span></a>
+    </div>
+    ${mine.length ? `<h3>Your rooms</h3><div class="list" style="margin-bottom:16px">${mine.map(e => roomRow(e)).join("")}</div>` : ""}
+    <h3>All rooms</h3>
+    <div class="list">${all.length ? all.slice(0, 30).map(e => roomRow(e)).join("") : `<div class="note">No rooms yet. Create the first one.</div>`}</div>
+    <p class="note" style="margin-top:16px">${Store.live ? "Rooms update live for everyone on this page. To pick in a draft you must be signed in to Claude with edit access to this page; anyone else can watch." : "Shared rooms aren't available here, so rooms stay on this device and one screen plays both seats."}</p>`;
+}
+
+/* ---------- create ---------- */
+function renderCreate() {
+  const n = (k, label, v, min, max, w = 110) => `<label class="f" style="width:${w}px">${label}<input id="${k}" type="number" min="${min}" max="${max}" value="${v}"></label>`;
+  app.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a href="#" class="small muted">← Back</a></div>
+    <form id="cf" class="panel stack" style="max-width:760px">
+      <h2>Create room</h2>
+      <div class="grid2">
+        <label class="f">Your in-game name<input id="c-me" required maxlength="24" value="${esc(ls("megadraft-name") || "")}"></label>
+        <label class="f">Room name<input id="c-name" maxlength="40" placeholder="Optional"></label>
+      </div>
+      <label class="f" style="width:140px">Town Hall<select id="c-th">${TH_LEVELS.map(t => `<option ${t === 17 ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <div><h3>Picks per player</h3><div class="row">
+        ${n("s-troops", "Troops", DEFAULT_SETTINGS.troops, 1, 12)}${n("s-supers", "of which super", DEFAULT_SETTINGS.supers, 0, 2)}
+        ${n("s-spells", "Spells", DEFAULT_SETTINGS.spells, 0, 8)}${n("s-sieges", "Siege", DEFAULT_SETTINGS.sieges, 0, 2)}
+        ${n("s-epics", "Epic equipment", DEFAULT_SETTINGS.epics, 0, 8)}${n("s-timer", "Seconds per pick", DEFAULT_SETTINGS.timer, 0, 600, 140)}
+      </div><p class="small muted" style="margin:6px 0 0">Each hero can take at most 2 epics. Heroes, pets and common equipment are free for everyone. Set seconds to 0 for no timer.</p></div>
+      <div><h3>Pool dealt at random</h3><div class="row">
+        ${n("p-troop", "Troops", DEFAULT_POOL.troop, 1, 40)}${n("p-super", "Super troops", DEFAULT_POOL.super, 0, 20)}${n("p-spell", "Spells", DEFAULT_POOL.spell, 0, 20)}
+        ${n("p-siege", "Siege", DEFAULT_POOL.siege, 0, 10)}${n("p-epic", "Epic equipment", DEFAULT_POOL.epic, 0, 19)}
+      </div><p class="small muted" style="margin:6px 0 0">Updates when you change the picks: about 1.5 times what both players draft, never more than the game has at this Town Hall. You can still adjust it by hand.</p><p class="small muted" style="margin:4px 0 0" id="poolhint"></p></div>
+      <label class="row small"><input type="checkbox" id="c-bot"> Practice against a bot (it takes the opponent seat and picks on its own)</label>
+      <div id="cerr" class="err" hidden></div>
+      <div class="row"><button class="primary" type="submit">Create room</button></div>
+    </form>`;
+  const read = () => {
+    const g = id => Math.max(0, parseInt(document.getElementById(id).value || "0", 10));
+    const th = +document.getElementById("c-th").value;
+    const settings = { troops: g("s-troops"), supers: Math.min(2, g("s-supers")), spells: g("s-spells"), sieges: g("s-sieges"), epics: g("s-epics"), timer: g("s-timer") };
+    const size = { troop: g("p-troop"), super: g("p-super"), spell: g("p-spell"), siege: g("p-siege"), epic: g("p-epic") };
+    return { th, settings, size };
+  };
+  const hint = () => {
+    const { th, settings, size } = read();
+    const avail = CATS.map(c => `${c.label.toLowerCase()} ${Math.min(size[c.k], eligible(th, c.k).length)} of ${eligible(th, c.k).length}`).join(", ");
+    document.getElementById("poolhint").textContent = `At TH${th} the pool deals ${avail}. Both players draft from it, so smaller pools force more overlap.`;
+    const p = poolProblem(th, size, settings), e = document.getElementById("cerr"); e.textContent = p; e.hidden = !p;
+  };
+  // Pool follows the picks: about 1.5x what both players draft (at least 2 spare), capped at what exists at this Town Hall.
+  const want = n => n ? Math.max(Math.ceil(1.5 * n), n + 2) : 0;
+  const capPool = () => {
+    const th = +document.getElementById("c-th").value;
+    for (const c of CATS) {
+      const el = document.getElementById("p-" + c.k), max = eligible(th, c.k).length;
+      el.max = max;
+      if (+el.value > max) el.value = max;
+      if (+el.value < 0 || el.value === "") el.value = 0;
+    }
+  };
+  const autoPool = () => {
+    const { settings: s } = read();
+    const sup = want(2 * s.supers), all = want(2 * s.troops);
+    const v = { troop: Math.max(0, all - sup), super: sup, spell: want(2 * s.spells), siege: want(2 * s.sieges), epic: want(2 * s.epics) };
+    for (const k in v) document.getElementById("p-" + k).value = v[k];
+    capPool();
+  };
+  app.querySelector("#cf").addEventListener("input", e => {
+    const id = e.target.id || "";
+    if (id.startsWith("s-") || id === "c-th") autoPool(); else if (id.startsWith("p-")) capPool();
+    hint();
+  });
+  autoPool(); hint();
+  document.getElementById("cf").onsubmit = async e => {
+    e.preventDefault();
+    const { th, settings, size } = read();
+    const p = poolProblem(th, size, settings); if (p) { toast(p); return }
+    const me = document.getElementById("c-me").value.trim(); ls("megadraft-name", me);
+    if (Store.live && !Store.uid) { toast("Sign in to Claude to create a room."); return }
+    const r = {
+      v: 2, name: document.getElementById("c-name").value.trim() || `${me}'s room`, th, createdAt: now(), hostUid: Store.uid,
+      phase: "lobby", first: null, practice: document.getElementById("c-bot").checked,
+      players: { A: { name: me, uid: Store.uid }, B: document.getElementById("c-bot").checked ? { name: "Bot", uid: "bot", bot: true } : null },
+      settings, size, pool: genPool(th, size), picks: [], turnStart: null, paused: false, pausedLeft: null, results: { A: null, B: null }
+    };
+    try { const id = await Store.create(r); location.hash = "r-" + id } catch (err) { toast("Couldn't create the room. You may not have edit access to this page.") }
+  };
+}
+
+/* ---------- join ---------- */
+function renderJoin() {
+  const all = roomsList();
+  const f = ui.thFilter;
+  const match = ([, r]) => f === "all" || String(r.th) === f;
+  const open = all.filter(([, r]) => r.phase === "lobby" && !r.players.B).filter(match);
+  const live = all.filter(([, r]) => !r.practice && (r.phase === "draft" || r.phase === "attack")).filter(match);
+  app.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a href="#" class="small muted">← Back</a></div>
+    <h2>Join room</h2>
+    <div class="chips" style="margin-bottom:14px">${["all", ...TH_LEVELS.map(String)].map(t => `<button type="button" data-th="${t}" class="${f === t ? "on" : ""}">${t === "all" ? "All Town Halls" : "TH" + t}</button>`).join("")}</div>
+    <h3>Waiting for an opponent</h3>
+    <div class="list" style="margin-bottom:16px">${open.length ? open.map(e => roomRow(e, "Join")).join("") : `<div class="note">No open rooms${f === "all" ? "" : " at TH" + f}. <a href="#create">Create one</a>.</div>`}</div>
+    <h3>In progress (watch)</h3>
+    <div class="list">${live.length ? live.map(e => roomRow(e)).join("") : `<div class="note">Nothing in progress${f === "all" ? "" : " at TH" + f}.</div>`}</div>`;
+  app.querySelectorAll("[data-th]").forEach(b => b.onclick = () => { ui.thFilter = b.dataset.th; ls("megadraft-th", ui.thFilter); render(true) });
+}
+
+/* ---------- room ---------- */
+function renderRoom(id) {
+  const r = Store.rooms[id];
+  if (!r) { app.innerHTML = Store.loaded ? `<div class="note">This room no longer exists. <a href="#join">Find another room</a>.</div>` : `<p class="muted">Loading room…</p>`; return }
+  const steps = ["lobby", "draft", "attack", "done"].map(p => `<span class="${r.phase === p ? "on" : ""}">${phaseLabel(p)}</span>`).join("");
+  const canDelete = (isHost(r) && r.phase === "lobby") || isMod();
+  let body = r.phase === "lobby" ? lobbyView(id, r) : r.phase === "draft" ? draftView(id, r) : attackView(id, r);
+  app.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a href="#" class="small muted">← All rooms</a><span class="spacer"></span>
+      ${canDelete ? `<button type="button" class="danger" id="del">Delete room</button>` : ""}</div>
+    <div class="row" style="margin-bottom:10px"><span class="th">TH${r.th}</span><h2 style="margin:0">${esc(r.name)}</h2></div>
+    <div class="steps">${steps}</div>
+    ${body}`;
+  const del = document.getElementById("del");
+  if (del) del.onclick = () => confirmInline(del, "Delete for everyone?", async () => { await Store.remove(id); location.hash = "" });
+  if (r.phase === "lobby") bindLobby(id, r);
+  else if (r.phase === "draft") bindDraft(id, r);
+  else bindAttack(id, r);
+}
+function confirmInline(btn, label, fn) {
+  const old = btn.textContent; btn.textContent = label; btn.classList.add("primary");
+  btn.onclick = async () => { await fn() };
+  setTimeout(() => { if (btn.isConnected) { btn.textContent = old; btn.classList.remove("primary"); btn.onclick = () => confirmInline(btn, label, fn) } }, 4000);
+}
+function poolGrid(r, seat, interactive) {
+  const takenBy = {}; r.picks.forEach(p => takenBy[p.id] = p.seat);
+  const q = ui.q.toLowerCase();
+  const items = r.pool.map(id => BYID[id]).filter(Boolean).filter(it => (ui.tab === "all" || it.c === ui.tab) && (!q || it.n.toLowerCase().includes(q)));
+  const tile = it => {
+    const t = takenBy[it.id], why = t || !seat ? "" : whyIllegal(r, seat, it);
+    const cls = ["tile", t ? "taken" + t : "", why ? "blocked" : "", ui.sel === it.id ? "sel" : ""].join(" ");
+    const title = t ? `Taken by ${r.players[t].name}` : why || it.n;
+    return `<button type="button" class="${cls}" data-pick="${it.id}" title="${esc(title)}" ${interactive ? "" : "tabindex=\"-1\""}>
+      ${it.c === "epic" ? `<img class="herotag" src="${HEROES[it.h].img}" alt="${esc(HEROES[it.h].n)}">` : ""}${t ? `<span class="own seat${t}">${t}</span>` : ""}
+      ${img(it)}<span>${esc(it.n)}</span>${it.hs ? `<span class="hs">${it.hs} space</span>` : it.c === "epic" ? `<span class="hs">${esc(HEROES[it.h].n)}</span>` : ""}</button>`;
+  };
+  let grid = "";
+  if (ui.tab === "all") for (const c of CATS) { const arr = items.filter(it => it.c === c.k); if (arr.length) grid += `<div class="sectionlab">${c.label} · ${arr.length}</div>` + arr.map(tile).join("") }
+  else grid = items.map(tile).join("");
+  return `<div class="row" style="margin-bottom:10px">
+      <div class="chips">${[{ k: "all", label: "All" }, ...CATS].map(c => `<button type="button" data-tab="${c.k}" class="${ui.tab === c.k ? "on" : ""}">${c.label}</button>`).join("")}</div>
+      <span class="spacer"></span><input id="q" placeholder="Search" value="${esc(ui.q)}" style="width:150px" aria-label="Search the pool">
+    </div><div class="pool">${grid || `<div class="muted">Nothing matches.</div>`}</div>`;
+}
+function bindPoolControls() {
+  app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { ui.tab = b.dataset.tab; render(true) });
+  const q = document.getElementById("q");
+  if (q) q.oninput = () => { ui.q = q.value; const pos = q.selectionStart; render(true); const n = document.getElementById("q"); n.focus(); n.setSelectionRange(pos, pos) };
+}
+function freeLine(r) {
+  const hs = Object.entries(HEROES).filter(([, h]) => h.th <= r.th);
+  return `<div class="row small muted"><span>Free for both:</span><span class="heroes">${hs.map(([, h]) => `<img src="${h.img}" alt="${esc(h.n)}" title="${esc(h.n)}">`).join("")}</span><span>all heroes (bring 4), pets and common equipment</span></div>`;
+}
+
+function lobbyView(id, r) {
+  const st = r.settings, A = r.players.A, B = r.players.B;
+  const seated = mySeats(r).length > 0;
+  const joinBox = !B && !(Store.live && seated) ? `
+    <form id="jf" class="row"><label class="f">Your in-game name<input id="j-me" required maxlength="24" value="${esc(ls("megadraft-name") || "")}"></label>
+    <button class="primary" type="submit" style="align-self:flex-end">Join as opponent</button></form>` : "";
+  return `
+    <div class="grid2" style="margin-bottom:12px">
+      <section class="panel roster A"><div class="head"><span class="name seatA">${esc(A.name)}</span><span class="pill">Host</span></div><div class="small muted">Ready</div></section>
+      <section class="panel roster B"><div class="head"><span class="name seatB">${B ? esc(B.name) : "Open seat"}</span></div>
+        ${B ? `<div class="small muted">Ready${isHost(r) || canActFor(r, "B") ? ` <button type="button" id="leaveB" style="margin-left:8px">${canActFor(r, "B") && !isHost(r) ? "Leave" : "Remove"}</button>` : ""}</div>` : joinBox || `<div class="small muted">Waiting for someone to join.</div>`}
+      </section>
+    </div>
+    <div class="panel stack" style="margin-bottom:12px">
+      <div class="row"><b>Each player picks ${st.troops} troops (max ${st.supers} super), ${st.spells} spells, ${st.sieges} siege, ${st.epics} epic equipment (max 2 per hero).</b></div>
+      ${freeLine(r)}
+      <div class="row">
+        ${isHost(r) ? `<button type="button" class="primary" id="start" ${B ? "" : "disabled"}>Start draft</button><button type="button" id="reroll">Deal a new pool</button>
+        <span class="small muted">${B ? "A coin flip decides first pick." : "You can start once someone joins."}</span>` : `<span class="small muted">The host starts the draft. A coin flip decides first pick.</span>`}
+      </div>
+    </div>
+    <section class="panel"><h3>Pool for this room · everyone sees it before the draft</h3>${poolGrid(r, null, false)}</section>`;
+}
+function bindLobby(id, r) {
+  bindPoolControls();
+  const jf = document.getElementById("jf");
+  if (jf) jf.onsubmit = async e => {
+    e.preventDefault();
+    const me = document.getElementById("j-me").value.trim(); ls("megadraft-name", me);
+    if (Store.live && !Store.uid) { toast("Sign in to Claude to join."); return }
+    const ok = await Store.mutate(id, x => { if (x.phase !== "lobby" || x.players.B) return null; x.players.B = { name: me, uid: Store.uid }; return x }).catch(() => false);
+    if (!ok) toast("Couldn't join. The seat may be taken, or you don't have edit access to this page.");
+  };
+  const lb = document.getElementById("leaveB"); if (lb) lb.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby") return null; x.players.B = null; return x });
+  const rr = document.getElementById("reroll"); if (rr) rr.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby") return null; x.pool = genPool(x.th, x.size); return x });
+  const s = document.getElementById("start");
+  if (s) s.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby" || !x.players.B) return null; x.phase = "draft"; x.first = Math.random() < .5 ? "A" : "B"; x.turnStart = now(); return x });
+}
+
+function rosterHTML(r, seat) {
+  const st = r.settings, last = r.picks[r.picks.length - 1];
+  const mine = r.picks.filter(p => p.seat === seat).map(p => ({ ...BYID[p.id], auto: p.auto }));
+  const chip = it => `<span class="chip ${last && last.id === it.id ? "last" : ""}" title="${it.auto ? "Auto-picked when the timer ran out" : ""}">${img(it, "")}${esc(it.n)}${it.auto ? " *" : ""}${it.c === "epic" ? ` <span class="muted">${it.h}</span>` : ""}</span>`;
+  const empties = n => Array.from({ length: Math.max(0, n) }, () => `<span class="chip empty">open</span>`).join("");
+  const troops = mine.filter(i => i.c === "troop" || i.c === "super"), supers = troops.filter(i => i.c === "super").length;
+  return [["Troops", troops, st.troops, `${supers}/${st.supers} super`], ["Spells", mine.filter(i => i.c === "spell"), st.spells], ["Siege", mine.filter(i => i.c === "siege"), st.sieges], ["Epic equip.", mine.filter(i => i.c === "epic"), st.epics]]
+    .filter(g => g[2] > 0).map(([lab, arr, cap, extra]) => `<div class="cat"><div class="lab">${lab}<br><span class="mono">${arr.length}/${cap}</span>${extra ? `<br>${extra}` : ""}</div><div class="slots">${arr.map(chip).join("")}${empties(cap - arr.length)}</div></div>`).join("");
+}
+function draftView(id, r) {
+  const i = r.picks.length, N = totalPicks(r), seat = seatForPick(r, i), next = i + 1 < N ? seatForPick(r, i + 1) : null;
+  const me = mySeats(r), mod = isMod();
+  const log = r.picks.map((p, k) => `<div><span class="mono muted">${String(k + 1).padStart(2, "0")}</span> <b class="seat${p.seat}">${esc(r.players[p.seat].name)}</b> took ${esc(BYID[p.id]?.n)}${p.auto ? " <span class='muted'>(auto, timer ran out)</span>" : ""}</div>`).reverse().join("");
+  const youTxt = me.includes(seat) ? (Store.live ? "Your pick" : "") : me.length ? "Opponent is picking" : "You're watching";
+  return `
+    <div class="status turn${seat}">
+      <div><div class="small muted">Pick ${i + 1} of ${N}${youTxt ? " · " + youTxt : ""}</div><div class="who seat${seat}">${esc(r.players[seat].name)} to pick</div></div>
+      <div class="clock" id="clock">${r.settings.timer ? fmt(r.paused ? (r.pausedLeft ?? r.settings.timer * 1000) : Math.max(0, deadline(r) - now())) : "No timer"}</div>
+      <div class="small muted">${next ? `Then: <span class="seat${next}">${esc(r.players[next].name)}</span>` : "Last pick"}</div>
+      <span class="spacer"></span>
+      ${mod ? `<button type="button" id="pause">${r.paused ? "Resume timer" : "Pause timer"}</button><button type="button" id="undo" ${i ? "" : "disabled"}>Undo last pick</button>` : ""}
+    </div>
+    <div class="grid2" style="margin-bottom:12px">
+      ${["A", "B"].map(s => `<section class="panel roster ${s}"><div class="head"><span class="name seat${s}">${esc(r.players[s].name)}</span>${r.first === s ? `<span class="pill">First pick</span>` : ""}</div>${rosterHTML(r, s)}</section>`).join("")}
+    </div>
+    <section class="panel">${poolGrid(r, seat, true)}</section>
+    <section class="panel" style="margin-top:12px"><h3>Pick log</h3><div class="log">${log || "<span class='muted'>No picks yet.</span>"}</div><div class="small muted" style="margin-top:6px">* auto-picked when the timer ran out</div></section>`;
+}
+function bindDraft(id, r) {
+  bindPoolControls();
+  const i = r.picks.length, seat = seatForPick(r, i);
+  app.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => {
+    const it = BYID[b.dataset.pick];
+    if (!canActFor(r, seat)) { toast(mySeats(r).length ? `Wait for ${r.players[seat].name} to pick.` : "You're watching this room."); return }
+    const why = whyIllegal(r, seat, it); if (why) { toast(why); return }
+    ui.sel = ui.sel === it.id ? null : it.id; render(true);
+  });
+  const p = document.getElementById("pause");
+  if (p) p.onclick = () => Store.mutate(id, x => {
+    if (x.phase !== "draft") return null;
+    if (x.paused) { x.paused = false; x.turnStart = now() - (x.settings.timer * 1000 - (x.pausedLeft ?? x.settings.timer * 1000)); x.pausedLeft = null }
+    else { const d = deadline(x); x.paused = true; x.pausedLeft = d ? Math.max(0, d - now()) : null }
+    return x;
+  });
+  const u = document.getElementById("undo");
+  if (u) u.onclick = () => Store.mutate(id, x => { if (x.phase !== "draft" || !x.picks.length) return null; x.picks = x.picks.slice(0, -1); x.turnStart = now(); return x });
+  const bar = document.getElementById("lockbar");
+  if (canActFor(r, seat)) {
+    const it = ui.sel && BYID[ui.sel];
+    bar.hidden = false;
+    bar.innerHTML = it ? `<span>Pick <b>${esc(it.n)}</b>${Store.live ? "" : ` for <b class="seat${seat}">${esc(r.players[seat].name)}</b>`}?</span><button type="button" class="primary" id="lockin">Lock in</button><button type="button" id="cancelSel">Cancel</button>`
+      : `<span class="muted">Your turn${Store.live ? "" : ` (<b class="seat${seat}">${esc(r.players[seat].name)}</b>)`}: tap an item, then lock it in.</span>`;
+    const li = document.getElementById("lockin");
+    if (li) li.onclick = async () => {
+      if (ui.busy) return; ui.busy = true; li.disabled = true;
+      const want = ui.sel;
+      const ok = await Store.mutate(id, x => x.picks.length === i ? applyPick(x, want, false) : null).catch(() => false);
+      ui.busy = false; ui.sel = null;
+      if (!ok) toast("That pick didn't go through because the board changed. Try again."); render(true);
+    };
+    const c = document.getElementById("cancelSel"); if (c) c.onclick = () => { ui.sel = null; render(true) };
+  }
+}
+
+function armyText(r, s) {
+  const arr = picksOf(r, s), g = c => arr.filter(i => c.includes(i.c)).map(i => i.c === "epic" ? `${i.n} (${HEROES[i.h].n})` : i.n).join(", ") || "-";
+  return `${r.players[s].name} · TH${r.th}\nTroops: ${g(["troop", "super"])}\nSpells: ${g(["spell"])}\nSiege: ${g(["siege"])}\nEpic equipment: ${g(["epic"])}`;
+}
+function attackView(id, r) {
+  const w = winner(r);
+  const resBox = s => {
+    const res = r.results?.[s], can = canActFor(r, s) || isMod();
+    return `<div class="stack"><h3>${esc(r.players[s].name)} attacking ${esc(r.players[other(s)].name)}</h3>
+      ${res ? `<div class="mono">${"★".repeat(+res.stars)}${"☆".repeat(3 - res.stars)} · ${res.pct}% · ${res.time}s left</div>` : ""}
+      ${can && r.phase === "attack" ? `<div class="row">
+        <label class="f">Stars<select id="r-${s}-stars">${[0, 1, 2, 3].map(n => `<option ${res && +res.stars === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+        <label class="f">Destruction %<input id="r-${s}-pct" type="number" min="0" max="100" value="${res ? res.pct : ""}" style="width:90px"></label>
+        <label class="f">Seconds left<input id="r-${s}-time" type="number" min="0" max="180" value="${res ? res.time : ""}" style="width:90px"></label>
+        <button type="button" data-res="${s}">${res ? "Update" : "Submit"}</button></div>` : (!res ? `<div class="muted">Waiting for result.</div>` : "")}
+    </div>`;
+  };
+  return `
+    <div class="note" style="margin-bottom:12px">Draft complete. Train only your picks; your Clan Castle can hold drafted items only. Send each other friendly challenges and start both attacks in the same 15-minute window.</div>
+    <div class="grid2">${["A", "B"].map(s => `<section class="panel roster ${s}"><div class="head"><span class="name seat${s}">${esc(r.players[s].name)}</span><span class="spacer"></span><button type="button" data-copy="${s}">Copy army</button></div>${rosterHTML(r, s)}</section>`).join("")}</div>
+    <section class="panel stack" style="margin-top:12px">
+      <h2>Results</h2>
+      <div class="grid2">${resBox("A")}${resBox("B")}</div>
+      ${w ? `<div class="win">${w === "tie" ? "Full tie: replay with a fresh draft." : `<span class="seat${w}">${esc(r.players[w].name)}</span> wins`}</div><div class="small muted">Stars first, then destruction %, then time left.</div>` : ""}
+      <div class="row">${r.phase === "attack" && w && (isHost(r) || isMod() || mySeats(r).length) ? `<button type="button" class="primary" id="finish">Close room as finished</button>` : ""}
+      ${(isHost(r) || isMod()) ? `<button type="button" id="rematch">Rematch with a new pool</button>` : ""}</div>
+    </section>`;
+}
+function bindAttack(id, r) {
+  app.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
+    try { await navigator.clipboard.writeText(armyText(r, b.dataset.copy)); toast("Army copied.") } catch (e) { toast("Copy is blocked here. Select the roster text instead.") }
+  });
+  app.querySelectorAll("[data-res]").forEach(b => b.onclick = () => {
+    const s = b.dataset.res, pe = document.getElementById(`r-${s}-pct`), te = document.getElementById(`r-${s}-time`);
+    const stars = +document.getElementById(`r-${s}-stars`).value, pct = +pe.value, time = +te.value;
+    if (pe.value === "" || te.value === "" || pct < 0 || pct > 100 || time < 0 || time > 180) { toast("Enter destruction 0–100 and seconds left 0–180."); return }
+    Store.mutate(id, x => { x.results = x.results || {}; x.results[s] = { stars, pct, time }; return x });
+  });
+  const f = document.getElementById("finish"); if (f) f.onclick = () => Store.mutate(id, x => { x.phase = "done"; return x });
+  const rm = document.getElementById("rematch");
+  if (rm) rm.onclick = () => confirmInline(rm, "Same players, new pool?", async () => {
+    const n = structuredClone(r);
+    Object.assign(n, { name: r.name.replace(/ \(rematch\)$/, "") + " (rematch)", createdAt: now(), phase: "lobby", first: null, pool: genPool(r.th, r.size), picks: [], turnStart: null, paused: false, pausedLeft: null, results: { A: null, B: null } });
+    const nid = await Store.create(n); location.hash = "r-" + nid;
+  });
+}
+
+/* ---------- practice bot ---------- */
+// Fills its emptiest category first, prefers bigger troops, and sometimes takes what the other player could still use.
+function botChoice(r, legal) {
+  const seat = seatForPick(r, r.picks.length), st = r.settings, c = counts(r, seat);
+  const need = { troop: st.troops - c.troop - c.super, spell: st.spells - c.spell, siege: st.sieges - c.siege, epic: st.epics - c.epic };
+  const score = it => {
+    const cat = it.c === "super" ? "troop" : it.c;
+    let s = need[cat] * 10 + Math.random() * 12;
+    if (it.hs) s += Math.min(it.hs, 30) / 6;
+    if (it.c === "super") s += 3;
+    return s;
+  };
+  return legal.slice().sort((a, b) => score(b) - score(a))[0];
+}
+
+/* ---------- timer + auto-pick ---------- */
+const autoTried = {};
+function fmt(ms) { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` }
+setInterval(() => {
+  const rt = route(); if (rt.v !== "room") return;
+  const r = Store.rooms[rt.id]; if (!r || r.phase !== "draft") return;
+  const c = document.getElementById("clock");
+  if (c && r.settings.timer) {
+    if (r.paused) { c.textContent = "Paused " + fmt(r.pausedLeft ?? r.settings.timer * 1000); c.className = "clock" }
+    else { const left = deadline(r) - now(); c.textContent = fmt(Math.max(0, left)); c.className = "clock" + (left < 10000 ? " low" : "") }
+  }
+  const i = r.picks.length, seat = seatForPick(r, i);
+  // practice bot: the host's device picks for it after a short pause
+  if (r.players[seat]?.bot && isHost(r) && !r.paused && r.turnStart && now() - r.turnStart >= 1200) {
+    const bk = rt.id + ":bot:" + i;
+    if (!autoTried[bk]) {
+      autoTried[bk] = true;
+      Store.mutate(rt.id, x => {
+        if (x.phase !== "draft" || x.picks.length !== i || x.paused) return null;
+        const legal = legalItems(x, seatForPick(x, i)); if (!legal.length) return null;
+        return applyPick(x, botChoice(x, legal).id, false);
+      }).catch(() => { autoTried[bk] = false });
+    }
+    return;
+  }
+  const d = deadline(r); if (!d) return;
+  const late = now() - d;
+  // the picker's own device auto-picks first; the opponent's device covers after 3 s, any viewer after 8 s
+  const due = mySeats(r).includes(seat) ? late >= 0 : mySeats(r).length ? late >= 3000 : late >= 8000;
+  const key = rt.id + ":" + i;
+  if (!due || autoTried[key]) return;
+  if (Store.live && !Store.uid) return;
+  autoTried[key] = true;
+  Store.mutate(rt.id, x => {
+    if (x.phase !== "draft" || x.picks.length !== i || x.paused) return null;
+    const dl = deadline(x); if (!dl || now() < dl) return null;
+    const legal = legalItems(x, seatForPick(x, i)); if (!legal.length) return null;
+    return applyPick(x, legal[Math.floor(Math.random() * legal.length)].id, true);
+  }).catch(() => { autoTried[key] = false });
+}, 250);
+
+Store.listeners.push(() => render());
+Store.init().then(() => render(true));
+</script>
