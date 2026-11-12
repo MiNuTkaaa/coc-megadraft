@@ -13,15 +13,14 @@ Heroes, pets and common equipment are free for everyone. Attacks are played as f
 
 ## Features
 
-- Create a room (Town Hall, pick limits, timer, pool sizes) or join one, with a Town Hall filter
-- Pool sizes default to about 1.5× what both players draft, capped at what exists at that Town Hall
+- Create a room (Town Hall, default TH18; picks per player; timer) or join one, with a Town Hall filter
+- Pool size follows the picks: about 1.5x what both players draft (15 troops, 6 supers, 12 spells, 4 sieges, 10 epics for the defaults)
+- Both players read the rules, mark the epic equipment they don't own and press Ready. The pool is dealt then, with only epics both players own
+- Either player can ask for a new pool during the draft; the other must accept, at most twice per room
+- 20-second pick timer by default, with a random auto-pick; a bottom bar shows the clock and whose turn it is
+- Finish drafting early once you have 5 troops, 3 spells, 1 siege and 2 epics
 - Practice mode against a bot
-- 20-second pick timer by default, with a random auto-pick when it runs out
-- A bottom bar shows whose turn it is and the clock, and the tab title says "Your turn"
-- Finish drafting early once you have the minimum (default 5 troops, 3 spells, 1 siege, 2 epics); your remaining turns are skipped
-- Mark the epic equipment you don't own when creating or joining a room: you can't draft it, and the pool deals only epics someone in the room owns
-- Rules shown in the room, including "only drafted items, Clan Castle included"
-- Army builder: set up troops, spells, siege, Clan Castle, heroes, pets and equipment from your picks and get an in-game "copy army" link. There's also a free builder at `#builder`
+- In-game style army builder with hard capacity limits, which makes an in-game "copy army" link. There's also a free builder at `#builder`
 - Pick log, results and winner
 
 ## Running it
@@ -52,7 +51,7 @@ If `firebase-config.js` is left empty, the app runs in **this device only** mode
 ### Known limits
 
 - Draft rules (slot caps, turn order) are checked in the browser, not by the server, so a player who edits the page code could cheat. That's fine among friends. A public ladder would need a Cloud Function to validate picks.
-- Army camp, spell and Clan Castle capacities in the builder are estimates per Town Hall. They only drive a warning and can be edited on the page.
+- Army capacities per Town Hall are in `CAP` in `tools/template.html`. TH12-17 were researched in November 2026 and may need updating after game changes.
 - Old rooms aren't deleted, only hidden from the lists after 24 hours. Delete them from the Firebase console now and then.
 
 ### Local testing
