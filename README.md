@@ -16,7 +16,13 @@ Heroes, pets and common equipment are free for everyone. Attacks are played as f
 - Create a room (Town Hall, pick limits, timer, pool sizes) or join one, with a Town Hall filter
 - Pool sizes default to about 1.5× what both players draft, capped at what exists at that Town Hall
 - Practice mode against a bot
-- Timer with random auto-pick, pick log, army export, results and winner
+- 20-second pick timer by default, with a random auto-pick when it runs out
+- A bottom bar shows whose turn it is and the clock, and the tab title says "Your turn"
+- Finish drafting early once you have the minimum (default 5 troops, 3 spells, 1 siege, 2 epics); your remaining turns are skipped
+- Mark the epic equipment you don't own when creating or joining a room: you can't draft it, and the pool deals only epics someone in the room owns
+- Rules shown in the room, including "only drafted items, Clan Castle included"
+- Army builder: set up troops, spells, siege, Clan Castle, heroes, pets and equipment from your picks and get an in-game "copy army" link. There's also a free builder at `#builder`
+- Pick log, results and winner
 
 ## Running it
 
@@ -46,6 +52,7 @@ If `firebase-config.js` is left empty, the app runs in **this device only** mode
 ### Known limits
 
 - Draft rules (slot caps, turn order) are checked in the browser, not by the server, so a player who edits the page code could cheat. That's fine among friends. A public ladder would need a Cloud Function to validate picks.
+- Army camp, spell and Clan Castle capacities in the builder are estimates per Town Hall. They only drive a warning and can be edited on the page.
 - Old rooms aren't deleted, only hidden from the lists after 24 hours. Delete them from the Firebase console now and then.
 
 ### Local testing

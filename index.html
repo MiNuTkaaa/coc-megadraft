@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Megadraft Board</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -101,6 +105,38 @@ label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; colo
 .tile .own { position: absolute; top: 4px; right: 5px; font-size: 11px; font-weight: 800 }
 .sectionlab { grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 6px; font-weight: 600 }
 .lockbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 5 }
+.dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); width: min(720px, calc(100% - 24px)); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.25); padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; z-index: 6 }
+.dock .dclock { font-family: var(--mono); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 64px }
+.dock .dclock.low { color: var(--bad) }
+.dock .dwho { font-family: var(--display); font-weight: 800; font-size: 17px; line-height: 1.15 }
+.dock .dsub { font-size: 12px; color: var(--muted) }
+.dock.mine { border: 2px solid var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent), 0 8px 30px rgba(0,0,0,.25) }
+@media (prefers-reduced-motion: no-preference) { .dock.mine { animation: pulse 1.6s ease-in-out infinite } @keyframes pulse { 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 10%, transparent), 0 8px 30px rgba(0,0,0,.25) } } }
+body.hasdock .wrap { padding-bottom: 120px }
+.rules { font-size: 14px; line-height: 1.5 }
+.rules ol { margin: 6px 0 0; padding-left: 20px } .rules li { margin: 3px 0 }
+.rules summary, details > summary { cursor: pointer }
+.lacks { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; margin-top: 8px }
+.lacks .hg { border: 1px solid var(--line); border-radius: 9px; padding: 6px 8px }
+.lacks .hg > div { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; margin-bottom: 4px }
+.lacks .hg img { width: 22px; height: 22px; border-radius: 5px }
+.lacks label { display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 2px 0 }
+.lacks label img { width: 24px; height: 24px; object-fit: contain }
+.ctrs { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px }
+.ctr { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel) }
+.ctr.on { border-color: var(--accent) }
+.ctr img { width: 34px; height: 34px; object-fit: contain }
+.ctr .nm { flex: 1; min-width: 0; font-size: 13px; line-height: 1.2 } .ctr .nm small { display: block; color: var(--muted); font-size: 11px }
+.ctr input { width: 48px; text-align: center; padding: 4px }
+.ctr button { padding: 2px 9px; font-size: 16px; line-height: 1.2 }
+.herorow { display: grid; grid-template-columns: 170px 1fr 1fr 1fr; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px dashed var(--line) }
+.herorow:first-of-type { border-top: 0 }
+@media (max-width: 640px) { .herorow { grid-template-columns: 1fr 1fr } }
+.herorow .hn { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px }
+.herorow .hn img { width: 30px; height: 30px; border-radius: 6px }
+.herorow select { width: 100%; min-width: 0 }
+.meter { font-family: var(--mono); font-size: 13px } .meter.over { color: var(--bad); font-weight: 700 }
+.linkbox { width: 100%; font-family: var(--mono); font-size: 12px }
 .log { max-height: 260px; overflow: auto; font-size: 12px }
 .log div { padding: 3px 0; border-bottom: 1px solid var(--line) }
 .note { font-size: 12px; padding: 8px 10px; border-radius: 8px; background: var(--panel2); color: var(--muted) }
@@ -120,19 +156,24 @@ label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; colo
   </header>
   <main id="app"><p class="muted">Loading…</p></main>
 </div>
-<div id="lockbar" class="lockbar" hidden></div>
+<div id="lockbar" class="dock" hidden></div>
 <div id="toast" class="toast" hidden></div>
 
 <script>
-const DATA = {"items":[{"id":"barbarian","n":"Barbarian","c":"troop","th":1,"hs":1,"fly":false,"img":"icons/barbarian.webp"},{"id":"archer","n":"Archer","c":"troop","th":2,"hs":1,"fly":false,"img":"icons/archer.webp"},{"id":"goblin","n":"Goblin","c":"troop","th":2,"hs":1,"fly":false,"img":"icons/goblin.webp"},{"id":"giant","n":"Giant","c":"troop","th":2,"hs":5,"fly":false,"img":"icons/giant.webp"},{"id":"wall_breaker","n":"Wall Breaker","c":"troop","th":3,"hs":2,"fly":false,"img":"icons/wall_breaker.webp"},{"id":"balloon","n":"Balloon","c":"troop","th":4,"hs":5,"fly":true,"img":"icons/balloon.webp"},{"id":"wizard","n":"Wizard","c":"troop","th":5,"hs":4,"fly":false,"img":"icons/wizard.webp"},{"id":"healer","n":"Healer","c":"troop","th":6,"hs":14,"fly":true,"img":"icons/healer.webp"},{"id":"dragon","n":"Dragon","c":"troop","th":7,"hs":20,"fly":true,"img":"icons/dragon.webp"},{"id":"pekka","n":"P.E.K.K.A","c":"troop","th":8,"hs":25,"fly":false,"img":"icons/pekka.webp"},{"id":"minion","n":"Minion","c":"troop","th":7,"hs":2,"fly":true,"img":"icons/minion.webp"},{"id":"hog_rider","n":"Hog Rider","c":"troop","th":7,"hs":5,"fly":false,"img":"icons/hog_rider.webp"},{"id":"valkyrie","n":"Valkyrie","c":"troop","th":8,"hs":8,"fly":false,"img":"icons/valkyrie.webp"},{"id":"golem","n":"Golem","c":"troop","th":8,"hs":30,"fly":false,"img":"icons/golem.webp"},{"id":"witch","n":"Witch","c":"troop","th":9,"hs":12,"fly":false,"img":"icons/witch.webp"},{"id":"lava_hound","n":"Lava Hound","c":"troop","th":9,"hs":30,"fly":true,"img":"icons/lava_hound.webp"},{"id":"bowler","n":"Bowler","c":"troop","th":10,"hs":6,"fly":false,"img":"icons/bowler.webp"},{"id":"baby_dragon","n":"Baby Dragon","c":"troop","th":9,"hs":10,"fly":true,"img":"icons/baby_dragon.webp"},{"id":"miner","n":"Miner","c":"troop","th":10,"hs":6,"fly":false,"img":"icons/miner.webp"},{"id":"super_barbarian","n":"Super Barbarian","c":"super","th":11,"hs":5,"fly":false,"img":"icons/super_barbarian.webp"},{"id":"super_archer","n":"Super Archer","c":"super","th":11,"hs":12,"fly":false,"img":"icons/super_archer.webp"},{"id":"super_wall_breaker","n":"Super Wall Breaker","c":"super","th":11,"hs":8,"fly":false,"img":"icons/super_wall_breaker.webp"},{"id":"super_giant","n":"Super Giant","c":"super","th":11,"hs":10,"fly":false,"img":"icons/super_giant.webp"},{"id":"wall_wrecker","n":"Wall Wrecker","c":"siege","th":12,"hs":null,"fly":false,"img":"icons/wall_wrecker.webp"},{"id":"battle_blimp","n":"Battle Blimp","c":"siege","th":12,"hs":null,"fly":true,"img":"icons/battle_blimp.webp"},{"id":"yeti","n":"Yeti","c":"troop","th":12,"hs":18,"fly":false,"img":"icons/yeti.webp"},{"id":"sneaky_goblin","n":"Sneaky Goblin","c":"super","th":11,"hs":3,"fly":false,"img":"icons/sneaky_goblin.webp"},{"id":"super_miner","n":"Super Miner","c":"super","th":11,"hs":24,"fly":false,"img":"icons/super_miner.webp"},{"id":"rocket_balloon","n":"Rocket Balloon","c":"super","th":11,"hs":8,"fly":true,"img":"icons/rocket_balloon.webp"},{"id":"ice_golem","n":"Ice Golem","c":"troop","th":11,"hs":15,"fly":false,"img":"icons/ice_golem.webp"},{"id":"electro_dragon","n":"Electro Dragon","c":"troop","th":11,"hs":30,"fly":true,"img":"icons/electro_dragon.webp"},{"id":"stone_slammer","n":"Stone Slammer","c":"siege","th":12,"hs":null,"fly":true,"img":"icons/stone_slammer.webp"},{"id":"inferno_dragon","n":"Inferno Dragon","c":"super","th":11,"hs":15,"fly":true,"img":"icons/inferno_dragon.webp"},{"id":"super_valkyrie","n":"Super Valkyrie","c":"super","th":11,"hs":20,"fly":false,"img":"icons/super_valkyrie.webp"},{"id":"dragon_rider","n":"Dragon Rider","c":"troop","th":13,"hs":25,"fly":true,"img":"icons/dragon_rider.webp"},{"id":"super_witch","n":"Super Witch","c":"super","th":11,"hs":40,"fly":false,"img":"icons/super_witch.webp"},{"id":"siege_barracks","n":"Siege Barracks","c":"siege","th":13,"hs":null,"fly":false,"img":"icons/siege_barracks.webp"},{"id":"ice_hound","n":"Ice Hound","c":"super","th":11,"hs":40,"fly":true,"img":"icons/ice_hound.webp"},{"id":"super_bowler","n":"Super Bowler","c":"super","th":11,"hs":30,"fly":false,"img":"icons/super_bowler.webp"},{"id":"super_dragon","n":"Super Dragon","c":"super","th":11,"hs":40,"fly":true,"img":"icons/super_dragon.webp"},{"id":"headhunter","n":"Headhunter","c":"troop","th":12,"hs":6,"fly":false,"img":"icons/headhunter.webp"},{"id":"super_wizard","n":"Super Wizard","c":"super","th":11,"hs":10,"fly":false,"img":"icons/super_wizard.webp"},{"id":"super_minion","n":"Super Minion","c":"super","th":11,"hs":12,"fly":true,"img":"icons/super_minion.webp"},{"id":"log_launcher","n":"Log Launcher","c":"siege","th":13,"hs":null,"fly":false,"img":"icons/log_launcher.webp"},{"id":"flame_flinger","n":"Flame Flinger","c":"siege","th":14,"hs":null,"fly":false,"img":"icons/flame_flinger.webp"},{"id":"battle_drill","n":"Battle Drill","c":"siege","th":15,"hs":null,"fly":false,"img":"icons/battle_drill.webp"},{"id":"electro_titan","n":"Electro Titan","c":"troop","th":14,"hs":32,"fly":false,"img":"icons/electro_titan.webp"},{"id":"apprentice_warden","n":"Apprentice Warden","c":"troop","th":13,"hs":20,"fly":false,"img":"icons/apprentice_warden.webp"},{"id":"super_hog_rider","n":"Super Hog Rider","c":"super","th":11,"hs":12,"fly":false,"img":"icons/super_hog_rider.webp"},{"id":"ruin_witch","n":"Ruin Witch","c":"troop","th":16,"hs":26,"fly":false,"img":"icons/ruin_witch.webp"},{"id":"root_rider","n":"Root Rider","c":"troop","th":15,"hs":20,"fly":false,"img":"icons/root_rider.webp"},{"id":"druid","n":"Druid","c":"troop","th":14,"hs":16,"fly":false,"img":"icons/druid.webp"},{"id":"thrower","n":"Thrower","c":"troop","th":16,"hs":16,"fly":false,"img":"icons/thrower.webp"},{"id":"troop_launcher","n":"Troop Launcher","c":"siege","th":16,"hs":null,"fly":false,"img":"icons/troop_launcher.webp"},{"id":"super_yeti","n":"Super Yeti","c":"super","th":12,"hs":35,"fly":false,"img":"icons/super_yeti.webp"},{"id":"furnace","n":"Furnace","c":"troop","th":15,"hs":18,"fly":false,"img":"icons/furnace.webp"},{"id":"meteor_golem","n":"Meteor Golem","c":"troop","th":17,"hs":40,"fly":false,"img":"icons/meteor_golem.webp"},{"id":"sky_wagon","n":"Sky Wagon","c":"siege","th":17,"hs":null,"fly":true,"img":"icons/sky_wagon.webp"},{"id":"lightning_spell","n":"Lightning","c":"spell","th":5,"hs":1,"img":"icons/lightning_spell.webp"},{"id":"healing_spell","n":"Healing","c":"spell","th":6,"hs":2,"img":"icons/healing_spell.webp"},{"id":"rage_spell","n":"Rage","c":"spell","th":7,"hs":2,"img":"icons/rage_spell.webp"},{"id":"jump_spell","n":"Jump","c":"spell","th":9,"hs":2,"img":"icons/jump_spell.webp"},{"id":"freeze_spell","n":"Freeze","c":"spell","th":9,"hs":1,"img":"icons/freeze_spell.webp"},{"id":"poison_spell","n":"Poison","c":"spell","th":8,"hs":1,"img":"icons/poison_spell.webp"},{"id":"earthquake_spell","n":"Earthquake","c":"spell","th":8,"hs":1,"img":"icons/earthquake_spell.webp"},{"id":"haste_spell","n":"Haste","c":"spell","th":9,"hs":1,"img":"icons/haste_spell.webp"},{"id":"clone_spell","n":"Clone","c":"spell","th":10,"hs":3,"img":"icons/clone_spell.webp"},{"id":"skeleton_spell","n":"Skeleton","c":"spell","th":9,"hs":1,"img":"icons/skeleton_spell.webp"},{"id":"bat_spell","n":"Bat","c":"spell","th":10,"hs":1,"img":"icons/bat_spell.webp"},{"id":"invisibility_spell","n":"Invisibility","c":"spell","th":11,"hs":1,"img":"icons/invisibility_spell.webp"},{"id":"recall_spell","n":"Recall","c":"spell","th":13,"hs":2,"img":"icons/recall_spell.webp"},{"id":"overgrowth_spell","n":"Overgrowth","c":"spell","th":12,"hs":2,"img":"icons/overgrowth_spell.webp"},{"id":"revive_spell","n":"Revive","c":"spell","th":15,"hs":2,"img":"icons/revive_spell.webp"},{"id":"ice_block_spell","n":"Ice Block","c":"spell","th":14,"hs":1,"img":"icons/ice_block_spell.webp"},{"id":"totem_spell","n":"Totem","c":"spell","th":16,"hs":1,"img":"icons/totem_spell.webp"},{"id":"angry_spell","n":"Angry","c":"spell","th":15,"hs":1,"img":"icons/angry_spell.webp"},{"id":"giant_gauntlet","n":"Giant Gauntlet","c":"epic","h":"BK","th":7,"img":"icons/giant_gauntlet.webp"},{"id":"rocket_spear","n":"Rocket Spear","c":"epic","h":"RC","th":13,"img":"icons/rocket_spear.webp"},{"id":"spiky_ball","n":"Spiky Ball","c":"epic","h":"BK","th":7,"img":"icons/spiky_ball.webp"},{"id":"frozen_arrow","n":"Frozen Arrow","c":"epic","h":"AQ","th":8,"img":"icons/frozen_arrow.webp"},{"id":"monolith_arrow","n":"Monolith Arrow","c":"epic","h":"AQ","th":8,"img":"icons/monolith_arrow.webp"},{"id":"heroic_torch","n":"Heroic Torch","c":"epic","h":"GW","th":11,"img":"icons/heroic_torch.webp"},{"id":"fireball","n":"Fireball","c":"epic","h":"GW","th":11,"img":"icons/fireball.webp"},{"id":"snake_bracelet","n":"Snake Bracelet","c":"epic","h":"BK","th":7,"img":"icons/snake_bracelet.webp"},{"id":"dark_crown","n":"Dark Crown","c":"epic","h":"MP","th":9,"img":"icons/dark_crown.webp"},{"id":"magic_mirror","n":"Magic Mirror","c":"epic","h":"AQ","th":8,"img":"icons/magic_mirror.webp"},{"id":"electro_boots","n":"Electro Boots","c":"epic","h":"RC","th":13,"img":"icons/electro_boots.webp"},{"id":"lavaloon_puppet","n":"Lavaloon Puppet","c":"epic","h":"GW","th":11,"img":"icons/lavaloon_puppet.webp"},{"id":"action_figure","n":"Action Figure","c":"epic","h":"AQ","th":8,"img":"icons/action_figure.webp"},{"id":"meteor_staff","n":"Meteor Staff","c":"epic","h":"MP","th":9,"img":"icons/meteor_staff.webp"},{"id":"frost_flake","n":"Frost Flake","c":"epic","h":"RC","th":13,"img":"icons/frost_flake.webp"},{"id":"stick_horse","n":"Stick Horse","c":"epic","h":"BK","th":7,"img":"icons/stick_horse.webp"},{"id":"rocket_backpack","n":"Rocket Backpack","c":"epic","h":"DD","th":15,"img":"icons/rocket_backpack.webp"},{"id":"revenge_deck","n":"Revenge Deck","c":"epic","h":"DD","th":15,"img":"icons/revenge_deck.webp"},{"id":"portal_pendant","n":"Portal Pendant","c":"epic","h":"MP","th":9,"img":"icons/portal_pendant.webp"}],"heroes":{"BK":{"n":"Barbarian King","img":"icons/hero_BK.webp","th":7},"AQ":{"n":"Archer Queen","img":"icons/hero_AQ.webp","th":8},"GW":{"n":"Grand Warden","img":"icons/hero_GW.webp","th":11},"RC":{"n":"Royal Champion","img":"icons/hero_RC.webp","th":13},"MP":{"n":"Minion Prince","img":"icons/hero_MP.webp","th":9},"DD":{"n":"Dragon Duke","img":"icons/hero_DD.webp","th":15}}};
-const ITEMS = DATA.items, HEROES = DATA.heroes;
+const DATA = {"items":[{"id":"barbarian","n":"Barbarian","c":"troop","th":1,"hs":1,"fly":false,"aid":0,"img":"icons/barbarian.webp"},{"id":"archer","n":"Archer","c":"troop","th":2,"hs":1,"fly":false,"aid":1,"img":"icons/archer.webp"},{"id":"goblin","n":"Goblin","c":"troop","th":2,"hs":1,"fly":false,"aid":2,"img":"icons/goblin.webp"},{"id":"giant","n":"Giant","c":"troop","th":2,"hs":5,"fly":false,"aid":3,"img":"icons/giant.webp"},{"id":"wall_breaker","n":"Wall Breaker","c":"troop","th":3,"hs":2,"fly":false,"aid":4,"img":"icons/wall_breaker.webp"},{"id":"balloon","n":"Balloon","c":"troop","th":4,"hs":5,"fly":true,"aid":5,"img":"icons/balloon.webp"},{"id":"wizard","n":"Wizard","c":"troop","th":5,"hs":4,"fly":false,"aid":6,"img":"icons/wizard.webp"},{"id":"healer","n":"Healer","c":"troop","th":6,"hs":14,"fly":true,"aid":7,"img":"icons/healer.webp"},{"id":"dragon","n":"Dragon","c":"troop","th":7,"hs":20,"fly":true,"aid":8,"img":"icons/dragon.webp"},{"id":"pekka","n":"P.E.K.K.A","c":"troop","th":8,"hs":25,"fly":false,"aid":9,"img":"icons/pekka.webp"},{"id":"minion","n":"Minion","c":"troop","th":7,"hs":2,"fly":true,"aid":10,"img":"icons/minion.webp"},{"id":"hog_rider","n":"Hog Rider","c":"troop","th":7,"hs":5,"fly":false,"aid":11,"img":"icons/hog_rider.webp"},{"id":"valkyrie","n":"Valkyrie","c":"troop","th":8,"hs":8,"fly":false,"aid":12,"img":"icons/valkyrie.webp"},{"id":"golem","n":"Golem","c":"troop","th":8,"hs":30,"fly":false,"aid":13,"img":"icons/golem.webp"},{"id":"witch","n":"Witch","c":"troop","th":9,"hs":12,"fly":false,"aid":15,"img":"icons/witch.webp"},{"id":"lava_hound","n":"Lava Hound","c":"troop","th":9,"hs":30,"fly":true,"aid":17,"img":"icons/lava_hound.webp"},{"id":"bowler","n":"Bowler","c":"troop","th":10,"hs":6,"fly":false,"aid":22,"img":"icons/bowler.webp"},{"id":"baby_dragon","n":"Baby Dragon","c":"troop","th":9,"hs":10,"fly":true,"aid":23,"img":"icons/baby_dragon.webp"},{"id":"miner","n":"Miner","c":"troop","th":10,"hs":6,"fly":false,"aid":24,"img":"icons/miner.webp"},{"id":"super_barbarian","n":"Super Barbarian","c":"super","th":11,"hs":5,"fly":false,"aid":26,"img":"icons/super_barbarian.webp"},{"id":"super_archer","n":"Super Archer","c":"super","th":11,"hs":12,"fly":false,"aid":27,"img":"icons/super_archer.webp"},{"id":"super_wall_breaker","n":"Super Wall Breaker","c":"super","th":11,"hs":8,"fly":false,"aid":28,"img":"icons/super_wall_breaker.webp"},{"id":"super_giant","n":"Super Giant","c":"super","th":11,"hs":10,"fly":false,"aid":29,"img":"icons/super_giant.webp"},{"id":"wall_wrecker","n":"Wall Wrecker","c":"siege","th":12,"hs":null,"fly":false,"aid":51,"img":"icons/wall_wrecker.webp"},{"id":"battle_blimp","n":"Battle Blimp","c":"siege","th":12,"hs":null,"fly":true,"aid":52,"img":"icons/battle_blimp.webp"},{"id":"yeti","n":"Yeti","c":"troop","th":12,"hs":18,"fly":false,"aid":53,"img":"icons/yeti.webp"},{"id":"sneaky_goblin","n":"Sneaky Goblin","c":"super","th":11,"hs":3,"fly":false,"aid":55,"img":"icons/sneaky_goblin.webp"},{"id":"super_miner","n":"Super Miner","c":"super","th":11,"hs":24,"fly":false,"aid":56,"img":"icons/super_miner.webp"},{"id":"rocket_balloon","n":"Rocket Balloon","c":"super","th":11,"hs":8,"fly":true,"aid":57,"img":"icons/rocket_balloon.webp"},{"id":"ice_golem","n":"Ice Golem","c":"troop","th":11,"hs":15,"fly":false,"aid":58,"img":"icons/ice_golem.webp"},{"id":"electro_dragon","n":"Electro Dragon","c":"troop","th":11,"hs":30,"fly":true,"aid":59,"img":"icons/electro_dragon.webp"},{"id":"stone_slammer","n":"Stone Slammer","c":"siege","th":12,"hs":null,"fly":true,"aid":62,"img":"icons/stone_slammer.webp"},{"id":"inferno_dragon","n":"Inferno Dragon","c":"super","th":11,"hs":15,"fly":true,"aid":63,"img":"icons/inferno_dragon.webp"},{"id":"super_valkyrie","n":"Super Valkyrie","c":"super","th":11,"hs":20,"fly":false,"aid":64,"img":"icons/super_valkyrie.webp"},{"id":"dragon_rider","n":"Dragon Rider","c":"troop","th":13,"hs":25,"fly":true,"aid":65,"img":"icons/dragon_rider.webp"},{"id":"super_witch","n":"Super Witch","c":"super","th":11,"hs":40,"fly":false,"aid":66,"img":"icons/super_witch.webp"},{"id":"siege_barracks","n":"Siege Barracks","c":"siege","th":13,"hs":null,"fly":false,"aid":75,"img":"icons/siege_barracks.webp"},{"id":"ice_hound","n":"Ice Hound","c":"super","th":11,"hs":40,"fly":true,"aid":76,"img":"icons/ice_hound.webp"},{"id":"super_bowler","n":"Super Bowler","c":"super","th":11,"hs":30,"fly":false,"aid":80,"img":"icons/super_bowler.webp"},{"id":"super_dragon","n":"Super Dragon","c":"super","th":11,"hs":40,"fly":true,"aid":81,"img":"icons/super_dragon.webp"},{"id":"headhunter","n":"Headhunter","c":"troop","th":12,"hs":6,"fly":false,"aid":82,"img":"icons/headhunter.webp"},{"id":"super_wizard","n":"Super Wizard","c":"super","th":11,"hs":10,"fly":false,"aid":83,"img":"icons/super_wizard.webp"},{"id":"super_minion","n":"Super Minion","c":"super","th":11,"hs":12,"fly":true,"aid":84,"img":"icons/super_minion.webp"},{"id":"log_launcher","n":"Log Launcher","c":"siege","th":13,"hs":null,"fly":false,"aid":87,"img":"icons/log_launcher.webp"},{"id":"flame_flinger","n":"Flame Flinger","c":"siege","th":14,"hs":null,"fly":false,"aid":91,"img":"icons/flame_flinger.webp"},{"id":"battle_drill","n":"Battle Drill","c":"siege","th":15,"hs":null,"fly":false,"aid":92,"img":"icons/battle_drill.webp"},{"id":"electro_titan","n":"Electro Titan","c":"troop","th":14,"hs":32,"fly":false,"aid":95,"img":"icons/electro_titan.webp"},{"id":"apprentice_warden","n":"Apprentice Warden","c":"troop","th":13,"hs":20,"fly":false,"aid":97,"img":"icons/apprentice_warden.webp"},{"id":"super_hog_rider","n":"Super Hog Rider","c":"super","th":11,"hs":12,"fly":false,"aid":98,"img":"icons/super_hog_rider.webp"},{"id":"ruin_witch","n":"Ruin Witch","c":"troop","th":16,"hs":26,"fly":false,"aid":109,"img":"icons/ruin_witch.webp"},{"id":"root_rider","n":"Root Rider","c":"troop","th":15,"hs":20,"fly":false,"aid":110,"img":"icons/root_rider.webp"},{"id":"druid","n":"Druid","c":"troop","th":14,"hs":16,"fly":false,"aid":123,"img":"icons/druid.webp"},{"id":"thrower","n":"Thrower","c":"troop","th":16,"hs":16,"fly":false,"aid":132,"img":"icons/thrower.webp"},{"id":"troop_launcher","n":"Troop Launcher","c":"siege","th":16,"hs":null,"fly":false,"aid":135,"img":"icons/troop_launcher.webp"},{"id":"super_yeti","n":"Super Yeti","c":"super","th":12,"hs":35,"fly":false,"aid":147,"img":"icons/super_yeti.webp"},{"id":"furnace","n":"Furnace","c":"troop","th":15,"hs":18,"fly":false,"aid":150,"img":"icons/furnace.webp"},{"id":"meteor_golem","n":"Meteor Golem","c":"troop","th":17,"hs":40,"fly":false,"aid":177,"img":"icons/meteor_golem.webp"},{"id":"sky_wagon","n":"Sky Wagon","c":"siege","th":17,"hs":null,"fly":true,"aid":188,"img":"icons/sky_wagon.webp"},{"id":"lightning_spell","n":"Lightning","c":"spell","th":5,"hs":1,"aid":0,"img":"icons/lightning_spell.webp"},{"id":"healing_spell","n":"Healing","c":"spell","th":6,"hs":2,"aid":1,"img":"icons/healing_spell.webp"},{"id":"rage_spell","n":"Rage","c":"spell","th":7,"hs":2,"aid":2,"img":"icons/rage_spell.webp"},{"id":"jump_spell","n":"Jump","c":"spell","th":9,"hs":2,"aid":3,"img":"icons/jump_spell.webp"},{"id":"freeze_spell","n":"Freeze","c":"spell","th":9,"hs":1,"aid":5,"img":"icons/freeze_spell.webp"},{"id":"poison_spell","n":"Poison","c":"spell","th":8,"hs":1,"aid":9,"img":"icons/poison_spell.webp"},{"id":"earthquake_spell","n":"Earthquake","c":"spell","th":8,"hs":1,"aid":10,"img":"icons/earthquake_spell.webp"},{"id":"haste_spell","n":"Haste","c":"spell","th":9,"hs":1,"aid":11,"img":"icons/haste_spell.webp"},{"id":"clone_spell","n":"Clone","c":"spell","th":10,"hs":3,"aid":16,"img":"icons/clone_spell.webp"},{"id":"skeleton_spell","n":"Skeleton","c":"spell","th":9,"hs":1,"aid":17,"img":"icons/skeleton_spell.webp"},{"id":"bat_spell","n":"Bat","c":"spell","th":10,"hs":1,"aid":28,"img":"icons/bat_spell.webp"},{"id":"invisibility_spell","n":"Invisibility","c":"spell","th":11,"hs":1,"aid":35,"img":"icons/invisibility_spell.webp"},{"id":"recall_spell","n":"Recall","c":"spell","th":13,"hs":2,"aid":53,"img":"icons/recall_spell.webp"},{"id":"overgrowth_spell","n":"Overgrowth","c":"spell","th":12,"hs":2,"aid":70,"img":"icons/overgrowth_spell.webp"},{"id":"revive_spell","n":"Revive","c":"spell","th":15,"hs":2,"aid":98,"img":"icons/revive_spell.webp"},{"id":"ice_block_spell","n":"Ice Block","c":"spell","th":14,"hs":1,"aid":109,"img":"icons/ice_block_spell.webp"},{"id":"totem_spell","n":"Totem","c":"spell","th":16,"hs":1,"aid":120,"img":"icons/totem_spell.webp"},{"id":"angry_spell","n":"Angry","c":"spell","th":15,"hs":1,"aid":123,"img":"icons/angry_spell.webp"},{"id":"giant_gauntlet","n":"Giant Gauntlet","h":"BK","th":7,"aid":10,"img":"icons/giant_gauntlet.webp","c":"epic"},{"id":"rocket_spear","n":"Rocket Spear","h":"RC","th":13,"aid":13,"img":"icons/rocket_spear.webp","c":"epic"},{"id":"spiky_ball","n":"Spiky Ball","h":"BK","th":7,"aid":14,"img":"icons/spiky_ball.webp","c":"epic"},{"id":"frozen_arrow","n":"Frozen Arrow","h":"AQ","th":8,"aid":15,"img":"icons/frozen_arrow.webp","c":"epic"},{"id":"monolith_arrow","n":"Monolith Arrow","h":"AQ","th":8,"aid":16,"img":"icons/monolith_arrow.webp","c":"epic"},{"id":"heroic_torch","n":"Heroic Torch","h":"GW","th":11,"aid":19,"img":"icons/heroic_torch.webp","c":"epic"},{"id":"fireball","n":"Fireball","h":"GW","th":11,"aid":22,"img":"icons/fireball.webp","c":"epic"},{"id":"snake_bracelet","n":"Snake Bracelet","h":"BK","th":7,"aid":32,"img":"icons/snake_bracelet.webp","c":"epic"},{"id":"dark_crown","n":"Dark Crown","h":"MP","th":9,"aid":35,"img":"icons/dark_crown.webp","c":"epic"},{"id":"magic_mirror","n":"Magic Mirror","h":"AQ","th":8,"aid":39,"img":"icons/magic_mirror.webp","c":"epic"},{"id":"electro_boots","n":"Electro Boots","h":"RC","th":13,"aid":40,"img":"icons/electro_boots.webp","c":"epic"},{"id":"lavaloon_puppet","n":"Lavaloon Puppet","h":"GW","th":11,"aid":41,"img":"icons/lavaloon_puppet.webp","c":"epic"},{"id":"action_figure","n":"Action Figure","h":"AQ","th":8,"aid":48,"img":"icons/action_figure.webp","c":"epic"},{"id":"meteor_staff","n":"Meteor Staff","h":"MP","th":9,"aid":49,"img":"icons/meteor_staff.webp","c":"epic"},{"id":"frost_flake","n":"Frost Flake","h":"RC","th":13,"aid":50,"img":"icons/frost_flake.webp","c":"epic"},{"id":"stick_horse","n":"Stick Horse","h":"BK","th":7,"aid":51,"img":"icons/stick_horse.webp","c":"epic"},{"id":"rocket_backpack","n":"Rocket Backpack","h":"DD","th":15,"aid":53,"img":"icons/rocket_backpack.webp","c":"epic"},{"id":"revenge_deck","n":"Revenge Deck","h":"DD","th":15,"aid":60,"img":"icons/revenge_deck.webp","c":"epic"},{"id":"portal_pendant","n":"Portal Pendant","h":"MP","th":9,"aid":61,"img":"icons/portal_pendant.webp","c":"epic"}],"heroes":{"BK":{"n":"Barbarian King","img":"icons/hero_BK.webp","th":7,"aid":0},"AQ":{"n":"Archer Queen","img":"icons/hero_AQ.webp","th":8,"aid":1},"GW":{"n":"Grand Warden","img":"icons/hero_GW.webp","th":11,"aid":2},"RC":{"n":"Royal Champion","img":"icons/hero_RC.webp","th":13,"aid":4},"MP":{"n":"Minion Prince","img":"icons/hero_MP.webp","th":9,"aid":6},"DD":{"n":"Dragon Duke","img":"icons/hero_DD.webp","th":15,"aid":7}},"commons":[{"id":"barbarian_puppet","n":"Barbarian Puppet","h":"BK","th":7,"aid":0,"img":"icons/barbarian_puppet.webp"},{"id":"rage_vial","n":"Rage Vial","h":"BK","th":7,"aid":1,"img":"icons/rage_vial.webp"},{"id":"archer_puppet","n":"Archer Puppet","h":"AQ","th":8,"aid":2,"img":"icons/archer_puppet.webp"},{"id":"invisibility_vial","n":"Invisibility Vial","h":"AQ","th":8,"aid":3,"img":"icons/invisibility_vial.webp"},{"id":"eternal_tome","n":"Eternal Tome","h":"GW","th":11,"aid":4,"img":"icons/eternal_tome.webp"},{"id":"life_gem","n":"Life Gem","h":"GW","th":11,"aid":5,"img":"icons/life_gem.webp"},{"id":"seeking_shield","n":"Seeking Shield","h":"RC","th":13,"aid":6,"img":"icons/seeking_shield.webp"},{"id":"royal_gem","n":"Royal Gem","h":"RC","th":13,"aid":7,"img":"icons/royal_gem.webp"},{"id":"earthquake_boots","n":"Earthquake Boots","h":"BK","th":7,"aid":8,"img":"icons/earthquake_boots.webp"},{"id":"hog_rider_puppet","n":"Hog Rider Puppet","h":"RC","th":13,"aid":9,"img":"icons/hog_rider_puppet.webp"},{"id":"vampstache","n":"Vampstache","h":"BK","th":7,"aid":11,"img":"icons/vampstache.webp"},{"id":"haste_vial","n":"Haste Vial","h":"RC","th":13,"aid":12,"img":"icons/haste_vial.webp"},{"id":"giant_arrow","n":"Giant Arrow","h":"AQ","th":8,"aid":17,"img":"icons/giant_arrow.webp"},{"id":"healer_puppet","n":"Healer Puppet","h":"AQ","th":8,"aid":20,"img":"icons/healer_puppet.webp"},{"id":"rage_gem","n":"Rage Gem","h":"GW","th":11,"aid":24,"img":"icons/rage_gem.webp"},{"id":"healing_tome","n":"Healing Tome","h":"GW","th":11,"aid":34,"img":"icons/healing_tome.webp"},{"id":"henchmen_puppet","n":"Henchmen Puppet","h":"MP","th":9,"aid":42,"img":"icons/henchmen_puppet.webp"},{"id":"dark_orb","n":"Dark Orb","h":"MP","th":9,"aid":43,"img":"icons/dark_orb.webp"},{"id":"metal_pants","n":"Metal Pants","h":"MP","th":9,"aid":44,"img":"icons/metal_pants.webp"},{"id":"noble_iron","n":"Noble Iron","h":"MP","th":9,"aid":47,"img":"icons/noble_iron.webp"},{"id":"fire_heart","n":"Fire Heart","h":"DD","th":15,"aid":52,"img":"icons/fire_heart.webp"},{"id":"stun_blaster","n":"Stun Blaster","h":"DD","th":15,"aid":56,"img":"icons/stun_blaster.webp"},{"id":"flame_blower","n":"Flame Blower","h":"DD","th":15,"aid":57,"img":"icons/flame_blower.webp"},{"id":"electro_fangs","n":"Electro Fangs","h":"DD","th":15,"aid":59,"img":"icons/electro_fangs.webp"}],"pets":[{"id":"pet_mighty_yak","n":"Mighty Yak","aid":1,"th":14,"img":"icons/pet_mighty_yak.webp"},{"id":"pet_electro_owl","n":"Electro Owl","aid":2,"th":14,"img":"icons/pet_electro_owl.webp"},{"id":"pet_unicorn","n":"Unicorn","aid":3,"th":14,"img":"icons/pet_unicorn.webp"},{"id":"pet_phoenix","n":"Phoenix","aid":4,"th":15,"img":"icons/pet_phoenix.webp"},{"id":"pet_poison_lizard","n":"Poison Lizard","aid":7,"th":15,"img":"icons/pet_poison_lizard.webp"},{"id":"pet_diggy","n":"Diggy","aid":8,"th":15,"img":"icons/pet_diggy.webp"},{"id":"pet_frosty","n":"Frosty","aid":9,"th":15,"img":"icons/pet_frosty.webp"},{"id":"pet_spirit_fox","n":"Spirit Fox","aid":10,"th":16,"img":"icons/pet_spirit_fox.webp"},{"id":"pet_angry_jelly","n":"Angry Jelly","aid":11,"th":16,"img":"icons/pet_angry_jelly.webp"},{"id":"pet_sneezy","n":"Sneezy","aid":16,"th":17,"img":"icons/pet_sneezy.webp"},{"id":"pet_greedy_raven","n":"Greedy Raven","aid":17,"th":18,"img":"icons/pet_greedy_raven.webp"}]};
+const ITEMS = DATA.items, HEROES = DATA.heroes, COMMONS = DATA.commons || [], PETS = DATA.pets || [];
 const BYID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 const CATS = [
   { k: "troop", label: "Troops" }, { k: "super", label: "Super troops" },
   { k: "spell", label: "Spells" }, { k: "siege", label: "Siege machines" }, { k: "epic", label: "Epic equipment" }];
 const TH_LEVELS = [12, 13, 14, 15, 16, 17, 18];
 const EPICS_PER_HERO = 2;
-const DEFAULT_SETTINGS = { troops: 7, supers: 2, spells: 4, sieges: 1, epics: 4, timer: 60 };
+const DEFAULT_SETTINGS = { troops: 7, supers: 2, spells: 4, sieges: 1, epics: 4, timer: 20 };
+const EPICS = ITEMS.filter(i => i.c === "epic");
+const EQUIP = Object.fromEntries([...EPICS, ...COMMONS].map(e => [e.id, e]));
+const PETBY = Object.fromEntries(PETS.map(p => [p.id, p]));
+// Army capacity by Town Hall. These are estimates you can change in the builder.
+const CAP = { 12: [300, 11, 35, 2], 13: [300, 11, 40, 2], 14: [300, 11, 45, 3], 15: [320, 11, 45, 3], 16: [320, 11, 50, 3], 17: [340, 11, 50, 3], 18: [360, 11, 55, 3] };
 const DEFAULT_POOL = { troop: 15, super: 6, spell: 12, siege: 4, epic: 12 };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -145,15 +186,33 @@ function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); l
 /* ---------- rules (pure) ---------- */
 const perPlayer = st => st.troops + st.spells + st.sieges + st.epics;
 const totalPicks = r => 2 * perPlayer(r.settings);
-function seatForPick(r, i) { const F = r.first, O = other(F); if (i === 0) return F; return Math.floor((i - 1) / 2) % 2 === 0 ? O : F }
+const seqSeat = (r, k) => { const F = r.first, O = other(F); if (k === 0) return F; return Math.floor((k - 1) / 2) % 2 === 0 ? O : F };
 const picksOf = (r, seat) => r.picks.filter(p => p.seat === seat).map(p => BYID[p.id]).filter(Boolean);
 function counts(r, seat) {
   const c = { troop: 0, super: 0, spell: 0, siege: 0, epic: 0, hero: {} };
   for (const it of picksOf(r, seat)) { c[it.c]++; if (it.c === "epic") c.hero[it.h] = (c.hero[it.h] || 0) + 1 }
   return c;
 }
+// A seat is out of the draft once it has every pick or chose to finish early. Its remaining turns are skipped.
+const seatFull = (r, s) => !!(r.done && r.done[s]) || picksOf(r, s).length >= perPlayer(r.settings);
+function curSlot(r) { const N = totalPicks(r); let k = r.turn ?? r.picks.length; while (k < N && seatFull(r, seqSeat(r, k))) k++; return k }
+function turnSeat(r) { const k = curSlot(r); return k < totalPicks(r) ? seqSeat(r, k) : null }
+function nextSeat(r) { const N = totalPicks(r); for (let k = curSlot(r) + 1; k < N; k++) { const s = seqSeat(r, k); if (!seatFull(r, s)) return s } return null }
+const minsOf = st => st.min || { troops: Math.max(0, st.troops - 2), spells: Math.max(0, st.spells - 1), epics: Math.max(0, st.epics - 2), sieges: st.sieges };
+function canFinish(r, s) { const m = minsOf(r.settings), c = counts(r, s); return c.troop + c.super >= m.troops && c.spell >= m.spells && c.epic >= m.epics && c.siege >= m.sieges }
+function checkEnd(r) { if (curSlot(r) >= totalPicks(r)) { r.phase = "attack"; r.turnStart = null } return r }
+// Used when a seat has nothing legal left to pick, for example every remaining epic is one it doesn't own.
+function finishStuck(r, s) { if (!s) return null; r.done = { ...(r.done || {}), [s]: true }; r.turnStart = now(); return checkEnd(r) }
+function finishSeat(r, s) {
+  if (r.phase !== "draft" || r.done?.[s]) return null;
+  if (!canFinish(r, s)) return legalItems(r, s).length ? null : finishStuck(r, s);
+  const before = turnSeat(r); r.done = { ...(r.done || {}), [s]: true };
+  if (turnSeat(r) !== before) r.turnStart = now();
+  return checkEnd(r);
+}
 function whyIllegal(r, seat, it) {
   if (!r.pool.includes(it.id)) return "Not in this room's pool";
+  if (it.c === "epic" && r.players[seat]?.lacks?.includes(it.id)) return `${r.players[seat].name} doesn't own ${it.n}`;
   if (r.picks.some(p => p.id === it.id)) return "Already taken";
   const s = r.settings, c = counts(r, seat);
   if (it.c === "troop" || it.c === "super") {
@@ -171,14 +230,13 @@ function whyIllegal(r, seat, it) {
 const legalItems = (r, seat) => r.pool.map(id => BYID[id]).filter(it => it && !whyIllegal(r, seat, it));
 function deadline(r) { if (!r.settings.timer || r.phase !== "draft" || r.paused || !r.turnStart) return null; return r.turnStart + r.settings.timer * 1000 }
 function applyPick(r, id, auto) {
-  const i = r.picks.length;
-  if (r.phase !== "draft" || i >= totalPicks(r)) return null;
-  const seat = seatForPick(r, i), it = BYID[id];
+  if (r.phase !== "draft") return null;
+  const k = curSlot(r); if (k >= totalPicks(r)) return null;
+  const seat = seqSeat(r, k), it = BYID[id];
   if (!it || whyIllegal(r, seat, it)) return null;
-  r.picks = [...r.picks, { id, seat, auto: !!auto, at: now() }];
-  r.turnStart = now();
-  if (r.picks.length >= totalPicks(r)) { r.phase = "attack"; r.turnStart = null }
-  return r;
+  r.picks = [...r.picks, { id, seat, auto: !!auto, at: now(), slot: k }];
+  r.turn = k + 1; r.turnStart = now();
+  return checkEnd(r);
 }
 function winner(r) {
   const a = r.results?.A, b = r.results?.B; if (!a || !b) return null;
@@ -188,10 +246,22 @@ function winner(r) {
 function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
 const eligible = (th, c) => ITEMS.filter(i => i.c === c && i.th <= th);
 // Deal a limited random pool so armies have to overlap. Troops always include some air and some ground.
-function genPool(th, size) {
+// Epics come only from ones at least one seated player owns, topped up so each player can fill their epic picks.
+function genPool(th, size, players, st) {
   const out = [];
+  const lacks = [players?.A, players?.B].filter(p => p && !p.bot).map(p => p.lacks || []);
   for (const c of ["troop", "super", "spell", "siege", "epic"]) {
-    const el = shuffle(eligible(th, c)), n = Math.min(size[c], el.length);
+    let el = shuffle(eligible(th, c));
+    if (c === "epic" && lacks.length) el = el.filter(i => lacks.some(l => !l.includes(i.id)));
+    const n = Math.min(size[c], el.length);
+    if (c === "epic") {
+      const pick = el.slice(0, n);
+      for (const l of lacks) {
+        const owned = () => pick.filter(i => !l.includes(i.id)).length;
+        for (const extra of el.filter(i => !pick.includes(i) && !l.includes(i.id))) { if (owned() >= (st?.epics || 0)) break; pick.push(extra) }
+      }
+      out.push(...pick.map(i => i.id)); continue;
+    }
     if (c === "troop") {
       const air = el.filter(i => i.fly), ground = el.filter(i => !i.fly);
       const pick = [...air.slice(0, Math.min(3, Math.ceil(n / 4))), ...ground.slice(0, Math.min(5, Math.ceil(n / 2)))];
@@ -201,6 +271,7 @@ function genPool(th, size) {
   }
   return out;
 }
+const redealEpics = r => { r.pool = r.pool.filter(id => BYID[id]?.c !== "epic").concat(genPool(r.th, { troop: 0, super: 0, spell: 0, siege: 0, epic: r.size.epic }, r.players, r.settings)); return r };
 function poolProblem(th, size, st) {
   const have = c => Math.min(size[c], eligible(th, c).length);
   if (st.supers > st.troops) return "Super troops can't exceed troop picks.";
@@ -305,7 +376,8 @@ const app = document.getElementById("app");
 function route() {
   const h = location.hash.slice(1);
   if (h.startsWith("r-")) return { v: "room", id: h.slice(2) };
-  if (h === "create" || h === "join") return { v: h };
+  if (h === "create" || h === "join" || h === "builder") return { v: h };
+  if (h.startsWith("army-")) { const m = h.slice(5); return { v: "army", id: m.slice(0, -2), seat: m.slice(-1) } }
   return { v: "home" };
 }
 let pendingRender = false;
@@ -313,12 +385,19 @@ function render(force) {
   const ae = document.activeElement;
   if (!force && ae && app.contains(ae) && ["INPUT", "SELECT", "TEXTAREA"].includes(ae.tagName)) { pendingRender = true; return }
   pendingRender = false;
+  const openDetails = [...app.querySelectorAll("details[data-k]")].filter(d => d.open).map(d => d.dataset.k);
+  draw();
+  app.querySelectorAll("details[data-k]").forEach(d => { if (openDetails.includes(d.dataset.k)) d.open = true });
+}
+function draw() {
   const mode = document.getElementById("mode");
   mode.textContent = Store.live ? "Live rooms" : "This device only";
   mode.title = Store.backend === "firebase" ? "Rooms are stored on the room server" : "";
   mode.className = "mode" + (Store.live ? " live" : "");
-  document.getElementById("lockbar").hidden = true;
+  document.getElementById("lockbar").hidden = true; document.body.classList.remove("hasdock"); document.title = "Megadraft Board";
   const r = route();
+  if (r.v === "builder") return renderBuilder(null);
+  if (r.v === "army") return renderBuilder(r);
   if (r.v === "room") return renderRoom(r.id);
   if (r.v === "create") return renderCreate();
   if (r.v === "join") return renderJoin();
@@ -350,6 +429,7 @@ function renderHome() {
       <a class="bigbtn go" href="#create"><b>Create room</b><span class="muted">Set the Town Hall and pick limits, then wait for an opponent.</span></a>
       <a class="bigbtn" href="#join"><b>Join room</b><span class="muted">${openCount} room${openCount === 1 ? "" : "s"} waiting for an opponent.</span></a>
     </div>
+    <p style="margin:-6px 0 16px"><a href="#builder">Army builder</a> <span class="muted small">· build any army and get an in-game link to copy it</span></p>
     ${mine.length ? `<h3>Your rooms</h3><div class="list" style="margin-bottom:16px">${mine.map(e => roomRow(e)).join("")}</div>` : ""}
     <h3>All rooms</h3>
     <div class="list">${all.length ? all.slice(0, 30).map(e => roomRow(e)).join("") : `<div class="note">No rooms yet. Create the first one.</div>`}</div>
@@ -373,6 +453,11 @@ function renderCreate() {
         ${n("s-spells", "Spells", DEFAULT_SETTINGS.spells, 0, 8)}${n("s-sieges", "Siege", DEFAULT_SETTINGS.sieges, 0, 2)}
         ${n("s-epics", "Epic equipment", DEFAULT_SETTINGS.epics, 0, 8)}${n("s-timer", "Seconds per pick", DEFAULT_SETTINGS.timer, 0, 600, 140)}
       </div><p class="small muted" style="margin:6px 0 0">Each hero can take at most 2 epics. Heroes, pets and common equipment are free for everyone. Set seconds to 0 for no timer.</p></div>
+      <div><h3>Finish drafting early once a player has at least</h3><div class="row">
+        ${n("m-troops", "Troops", 5, 0, 12)}${n("m-spells", "Spells", 3, 0, 8)}${n("m-sieges", "Siege", 1, 0, 2)}${n("m-epics", "Epic equipment", 2, 0, 8)}
+      </div><p class="small muted" style="margin:6px 0 0">Follows the picks above. A player who reaches these can stop and skip the rest of their turns.</p></div>
+      <details data-k="clk"><summary><b>Epic equipment you don't have</b> <span class="muted small">(${myLacks().length} marked)</span></summary>
+        <p class="small muted">Tick what you haven't unlocked. You won't be able to draft it, and the pool won't deal epics that nobody in the room owns.</p>${lacksPicker("lk", myLacks())}</details>
       <div><h3>Pool dealt at random</h3><div class="row">
         ${n("p-troop", "Troops", DEFAULT_POOL.troop, 1, 40)}${n("p-super", "Super troops", DEFAULT_POOL.super, 0, 20)}${n("p-spell", "Spells", DEFAULT_POOL.spell, 0, 20)}
         ${n("p-siege", "Siege", DEFAULT_POOL.siege, 0, 10)}${n("p-epic", "Epic equipment", DEFAULT_POOL.epic, 0, 19)}
@@ -386,6 +471,7 @@ function renderCreate() {
     const th = +document.getElementById("c-th").value;
     const settings = { troops: g("s-troops"), supers: Math.min(2, g("s-supers")), spells: g("s-spells"), sieges: g("s-sieges"), epics: g("s-epics"), timer: g("s-timer") };
     const size = { troop: g("p-troop"), super: g("p-super"), spell: g("p-spell"), siege: g("p-siege"), epic: g("p-epic") };
+    settings.min = { troops: Math.min(g("m-troops"), settings.troops), spells: Math.min(g("m-spells"), settings.spells), sieges: Math.min(g("m-sieges"), settings.sieges), epics: Math.min(g("m-epics"), settings.epics) };
     return { th, settings, size };
   };
   const hint = () => {
@@ -410,6 +496,8 @@ function renderCreate() {
     const sup = want(2 * s.supers), all = want(2 * s.troops);
     const v = { troop: Math.max(0, all - sup), super: sup, spell: want(2 * s.spells), siege: want(2 * s.sieges), epic: want(2 * s.epics) };
     for (const k in v) document.getElementById("p-" + k).value = v[k];
+    const m = minsOf({ ...s, min: null });
+    for (const k in m) document.getElementById("m-" + k).value = m[k];
     capPool();
   };
   app.querySelector("#cf").addEventListener("input", e => {
@@ -424,11 +512,12 @@ function renderCreate() {
     const p = poolProblem(th, size, settings); if (p) { toast(p); return }
     const me = document.getElementById("c-me").value.trim(); ls("megadraft-name", me);
     if (Store.live && !Store.uid) { toast("Sign in to Claude to create a room."); return }
+    const lacks = readLacks("lk"); ls("megadraft-lacks", JSON.stringify(lacks));
     const r = {
       v: 2, name: document.getElementById("c-name").value.trim() || `${me}'s room`, th, createdAt: now(), hostUid: Store.uid,
       phase: "lobby", first: null, practice: document.getElementById("c-bot").checked,
-      players: { A: { name: me, uid: Store.uid }, B: document.getElementById("c-bot").checked ? { name: "Bot", uid: "bot", bot: true } : null },
-      settings, size, pool: genPool(th, size), picks: [], turnStart: null, paused: false, pausedLeft: null, results: { A: null, B: null }
+      players: { A: { name: me, uid: Store.uid, lacks }, B: document.getElementById("c-bot").checked ? { name: "Bot", uid: "bot", bot: true } : null },
+      settings, size, pool: genPool(th, size, { A: { lacks } }, settings), picks: [], turnStart: null, paused: false, pausedLeft: null, results: { A: null, B: null }
     };
     try { const id = await Store.create(r); location.hash = "r-" + id } catch (err) { toast("Couldn't create the room. Check your connection and try again.") }
   };
@@ -506,21 +595,47 @@ function freeLine(r) {
   return `<div class="row small muted"><span>Free for both:</span><span class="heroes">${hs.map(([, h]) => `<img src="${h.img}" alt="${esc(h.n)}" title="${esc(h.n)}">`).join("")}</span><span>all heroes (bring 4), pets and common equipment</span></div>`;
 }
 
+function rulesHTML(r) {
+  const st = r.settings, m = minsOf(st);
+  return `<ol>
+    <li><b>Snake draft.</b> A coin flip decides who picks first. After that each player takes two picks in a row. Every item can be taken by only one player.</li>
+    <li><b>Each player drafts</b> ${st.troops} troops (at most ${st.supers} super), ${st.spells} spells, ${st.sieges} siege machine${st.sieges === 1 ? "" : "s"} and ${st.epics} epic equipment (at most ${EPICS_PER_HERO} per hero).</li>
+    <li><b>You attack only with what you drafted.</b> Every troop, super troop, spell and siege machine in your army must be one of your picks. <b>This includes your Clan Castle:</b> no troop, spell or siege machine that you didn't draft, from anyone. A spell you didn't draft can't be used at all. You can bring any number of each drafted troop or spell that fits your camps.</li>
+    <li><b>Free for everyone:</b> all heroes (bring up to 4), all pets and all common equipment. Epic equipment must be drafted.</li>
+    <li><b>Epic equipment you don't own</b> is marked in the room, and you can't pick it. The pool only deals epics that at least one player owns.</li>
+    <li><b>Timer:</b> ${st.timer ? `${st.timer} seconds per pick. If it runs out, a random legal item is picked for you and marked with *.` : "none in this room."}</li>
+    <li><b>Finish early:</b> once you have at least ${m.troops} troops, ${m.spells} spells, ${m.sieges} siege and ${m.epics} epic equipment, you can press Finish drafting. Your remaining turns are skipped and you can't pick again.</li>
+    <li><b>Attacks:</b> each player attacks the other's own base in a friendly challenge, both within 15 minutes. Stars win, then destruction %, then time left.</li>
+  </ol>`;
+}
+const myLacks = () => { try { return JSON.parse(ls("megadraft-lacks") || "[]") } catch (e) { return [] } };
+function lacksPicker(prefix, selected) {
+  const by = {}; EPICS.forEach(e => (by[e.h] = by[e.h] || []).push(e));
+  return `<div class="lacks">${Object.entries(by).map(([h, arr]) => `<div class="hg"><div><img src="${HEROES[h].img}" alt="">${esc(HEROES[h].n)}</div>
+    ${arr.map(e => `<label><input type="checkbox" data-${prefix}="${e.id}" ${selected.includes(e.id) ? "checked" : ""}>${img(e, "")}${esc(e.n)}</label>`).join("")}</div>`).join("")}</div>`;
+}
+const readLacks = prefix => [...app.querySelectorAll(`[data-${prefix}]`)].filter(c => c.checked).map(c => c.getAttribute("data-" + prefix));
+const lacksLine = p => p?.lacks?.length ? `<div class="small muted" style="margin-top:4px">Doesn't own: ${p.lacks.map(id => esc(BYID[id]?.n || id)).join(", ")}</div>` : "";
+
 function lobbyView(id, r) {
   const st = r.settings, A = r.players.A, B = r.players.B;
   const seated = mySeats(r).length > 0;
   const joinBox = !B && !(Store.live && seated) ? `
-    <form id="jf" class="row"><label class="f">Your in-game name<input id="j-me" required maxlength="24" value="${esc(ls("megadraft-name") || "")}"></label>
-    <button class="primary" type="submit" style="align-self:flex-end">Join as opponent</button></form>` : "";
+    <form id="jf" class="stack"><div class="row"><label class="f">Your in-game name<input id="j-me" required maxlength="24" value="${esc(ls("megadraft-name") || "")}"></label>
+    <button class="primary" type="submit" style="align-self:flex-end">Join as opponent</button></div>
+    <details data-k="jlk"><summary class="small"><b>Epic equipment you don't have</b> (${myLacks().length} marked)</summary>${lacksPicker("lk", myLacks())}</details></form>` : "";
+  const editLacks = mySeats(r).filter(s => r.players[s] && !r.players[s].bot).map(s => `<details data-k="elk${s}" class="panel" style="margin-bottom:12px"><summary><b>Epic equipment ${Store.live ? "you don't" : esc(r.players[s].name) + " doesn't"} have</b> <span class="muted small">(${(r.players[s].lacks || []).length} marked)</span></summary>
+    <p class="small muted">Tick what isn't unlocked, then save. The epic part of the pool is dealt again.</p>${lacksPicker("lk" + s, r.players[s].lacks || [])}<div class="row" style="margin-top:8px"><button type="button" class="primary" data-savelacks="${s}">Save</button></div></details>`).join("");
   return `
     <div class="grid2" style="margin-bottom:12px">
-      <section class="panel roster A"><div class="head"><span class="name seatA">${esc(A.name)}</span><span class="pill">Host</span></div><div class="small muted">Ready</div></section>
+      <section class="panel roster A"><div class="head"><span class="name seatA">${esc(A.name)}</span><span class="pill">Host</span></div><div class="small muted">Ready</div>${lacksLine(A)}</section>
       <section class="panel roster B"><div class="head"><span class="name seatB">${B ? esc(B.name) : "Open seat"}</span></div>
-        ${B ? `<div class="small muted">Ready${isHost(r) || canActFor(r, "B") ? ` <button type="button" id="leaveB" style="margin-left:8px">${canActFor(r, "B") && !isHost(r) ? "Leave" : "Remove"}</button>` : ""}</div>` : joinBox || `<div class="small muted">Waiting for someone to join.</div>`}
+        ${B ? `<div class="small muted">Ready${isHost(r) || canActFor(r, "B") ? ` <button type="button" id="leaveB" style="margin-left:8px">${canActFor(r, "B") && !isHost(r) ? "Leave" : "Remove"}</button>` : ""}</div>${lacksLine(B)}` : joinBox || `<div class="small muted">Waiting for someone to join.</div>`}
       </section>
     </div>
+    ${editLacks}
     <div class="panel stack" style="margin-bottom:12px">
-      <div class="row"><b>Each player picks ${st.troops} troops (max ${st.supers} super), ${st.spells} spells, ${st.sieges} siege, ${st.epics} epic equipment (max 2 per hero).</b></div>
+      <div class="rules"><h3 style="margin:0">Rules</h3>${rulesHTML(r)}</div>
       ${freeLine(r)}
       <div class="row">
         ${isHost(r) ? `<button type="button" class="primary" id="start" ${B ? "" : "disabled"}>Start draft</button><button type="button" id="reroll">Deal a new pool</button>
@@ -536,13 +651,20 @@ function bindLobby(id, r) {
     e.preventDefault();
     const me = document.getElementById("j-me").value.trim(); ls("megadraft-name", me);
     if (Store.live && !Store.uid) { toast("Sign in to Claude to join."); return }
-    const ok = await Store.mutate(id, x => { if (x.phase !== "lobby" || x.players.B) return null; x.players.B = { name: me, uid: Store.uid }; return x }).catch(() => false);
+    const lacks = readLacks("lk"); ls("megadraft-lacks", JSON.stringify(lacks));
+    const ok = await Store.mutate(id, x => { if (x.phase !== "lobby" || x.players.B) return null; x.players.B = { name: me, uid: Store.uid, lacks }; return x.size.epic ? redealEpics(x) : x }).catch(() => false);
     if (!ok) toast("Couldn't join. The seat may already be taken.");
   };
   const lb = document.getElementById("leaveB"); if (lb) lb.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby") return null; x.players.B = null; return x });
-  const rr = document.getElementById("reroll"); if (rr) rr.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby") return null; x.pool = genPool(x.th, x.size); return x });
+  const rr = document.getElementById("reroll"); if (rr) rr.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby") return null; x.pool = genPool(x.th, x.size, x.players, x.settings); return x });
+  app.querySelectorAll("[data-savelacks]").forEach(b => b.onclick = async () => {
+    const s = b.dataset.savelacks, lacks = readLacks("lk" + s);
+    if (Store.live) ls("megadraft-lacks", JSON.stringify(lacks));
+    const ok = await Store.mutate(id, x => { if (x.phase !== "lobby" || !x.players[s]) return null; x.players[s].lacks = lacks; return x.size.epic ? redealEpics(x) : x }).catch(() => false);
+    toast(ok ? "Saved. Epics were dealt again." : "Couldn't save. The draft may have started.");
+  });
   const s = document.getElementById("start");
-  if (s) s.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby" || !x.players.B) return null; x.phase = "draft"; x.first = Math.random() < .5 ? "A" : "B"; x.turnStart = now(); return x });
+  if (s) s.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby" || !x.players.B) return null; x.phase = "draft"; x.first = Math.random() < .5 ? "A" : "B"; x.turn = 0; x.done = {}; x.turnStart = now(); return x });
 }
 
 function rosterHTML(r, seat) {
@@ -555,27 +677,28 @@ function rosterHTML(r, seat) {
     .filter(g => g[2] > 0).map(([lab, arr, cap, extra]) => `<div class="cat"><div class="lab">${lab}<br><span class="mono">${arr.length}/${cap}</span>${extra ? `<br>${extra}` : ""}</div><div class="slots">${arr.map(chip).join("")}${empties(cap - arr.length)}</div></div>`).join("");
 }
 function draftView(id, r) {
-  const i = r.picks.length, N = totalPicks(r), seat = seatForPick(r, i), next = i + 1 < N ? seatForPick(r, i + 1) : null;
+  const i = r.picks.length, N = r.picks.length + ["A", "B"].reduce((a, s) => a + (seatFull(r, s) ? 0 : perPlayer(r.settings) - picksOf(r, s).length), 0), seat = turnSeat(r), next = nextSeat(r);
   const me = mySeats(r), mod = isMod();
   const log = r.picks.map((p, k) => `<div><span class="mono muted">${String(k + 1).padStart(2, "0")}</span> <b class="seat${p.seat}">${esc(r.players[p.seat].name)}</b> took ${esc(BYID[p.id]?.n)}${p.auto ? " <span class='muted'>(auto, timer ran out)</span>" : ""}</div>`).reverse().join("");
   const youTxt = me.includes(seat) ? (Store.live ? "Your pick" : "") : me.length ? "Opponent is picking" : "You're watching";
   return `
     <div class="status turn${seat}">
       <div><div class="small muted">Pick ${i + 1} of ${N}${youTxt ? " · " + youTxt : ""}</div><div class="who seat${seat}">${esc(r.players[seat].name)} to pick</div></div>
-      <div class="clock" id="clock">${r.settings.timer ? fmt(r.paused ? (r.pausedLeft ?? r.settings.timer * 1000) : Math.max(0, deadline(r) - now())) : "No timer"}</div>
+      <div class="clock js-clock" id="clock">${r.settings.timer ? fmt(r.paused ? (r.pausedLeft ?? r.settings.timer * 1000) : Math.max(0, deadline(r) - now())) : "No timer"}</div>
       <div class="small muted">${next ? `Then: <span class="seat${next}">${esc(r.players[next].name)}</span>` : "Last pick"}</div>
       <span class="spacer"></span>
       ${mod ? `<button type="button" id="pause">${r.paused ? "Resume timer" : "Pause timer"}</button><button type="button" id="undo" ${i ? "" : "disabled"}>Undo last pick</button>` : ""}
     </div>
     <div class="grid2" style="margin-bottom:12px">
-      ${["A", "B"].map(s => `<section class="panel roster ${s}"><div class="head"><span class="name seat${s}">${esc(r.players[s].name)}</span>${r.first === s ? `<span class="pill">First pick</span>` : ""}</div>${rosterHTML(r, s)}</section>`).join("")}
+      ${["A", "B"].map(s => `<section class="panel roster ${s}"><div class="head"><span class="name seat${s}">${esc(r.players[s].name)}</span>${r.first === s ? `<span class="pill">First pick</span>` : ""}${r.done?.[s] ? `<span class="pill">Finished drafting</span>` : ""}</div>${rosterHTML(r, s)}${lacksLine(r.players[s])}</section>`).join("")}
     </div>
+    <details data-k="rules" class="panel rules" style="margin-bottom:12px"><summary><b>Rules</b> <span class="muted small">· only drafted items, Clan Castle included</span></summary>${rulesHTML(r)}</details>
     <section class="panel">${poolGrid(r, seat, true)}</section>
     <section class="panel" style="margin-top:12px"><h3>Pick log</h3><div class="log">${log || "<span class='muted'>No picks yet.</span>"}</div><div class="small muted" style="margin-top:6px">* auto-picked when the timer ran out</div></section>`;
 }
 function bindDraft(id, r) {
   bindPoolControls();
-  const i = r.picks.length, seat = seatForPick(r, i);
+  const i = r.picks.length, k = curSlot(r), seat = turnSeat(r), next = nextSeat(r);
   app.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => {
     const it = BYID[b.dataset.pick];
     if (!canActFor(r, seat)) { toast(mySeats(r).length ? `Wait for ${r.players[seat].name} to pick.` : "You're watching this room."); return }
@@ -590,23 +713,40 @@ function bindDraft(id, r) {
     return x;
   });
   const u = document.getElementById("undo");
-  if (u) u.onclick = () => Store.mutate(id, x => { if (x.phase !== "draft" || !x.picks.length) return null; x.picks = x.picks.slice(0, -1); x.turnStart = now(); return x });
-  const bar = document.getElementById("lockbar");
-  if (canActFor(r, seat)) {
-    const it = ui.sel && BYID[ui.sel];
-    bar.hidden = false;
-    bar.innerHTML = it ? `<span>Pick <b>${esc(it.n)}</b>${Store.live ? "" : ` for <b class="seat${seat}">${esc(r.players[seat].name)}</b>`}?</span><button type="button" class="primary" id="lockin">Lock in</button><button type="button" id="cancelSel">Cancel</button>`
-      : `<span class="muted">Your turn${Store.live ? "" : ` (<b class="seat${seat}">${esc(r.players[seat].name)}</b>)`}: tap an item, then lock it in.</span>`;
-    const li = document.getElementById("lockin");
-    if (li) li.onclick = async () => {
-      if (ui.busy) return; ui.busy = true; li.disabled = true;
-      const want = ui.sel;
-      const ok = await Store.mutate(id, x => x.picks.length === i ? applyPick(x, want, false) : null).catch(() => false);
-      ui.busy = false; ui.sel = null;
-      if (!ok) toast("That pick didn't go through because the board changed. Try again."); render(true);
-    };
-    const c = document.getElementById("cancelSel"); if (c) c.onclick = () => { ui.sel = null; render(true) };
-  }
+  if (u) u.onclick = () => Store.mutate(id, x => {
+    if (x.phase !== "draft" || !x.picks.length) return null;
+    const last = x.picks[x.picks.length - 1]; x.picks = x.picks.slice(0, -1);
+    x.turn = last.slot ?? x.picks.length; if (x.done) delete x.done[last.seat]; x.turnStart = now(); return x;
+  });
+  // bottom dock: whose turn, the clock, lock in and finish drafting
+  const bar = document.getElementById("lockbar"), mine = canActFor(r, seat);
+  const finSeat = !Store.live && mySeats(r).includes(seat) ? seat : mySeats(r).find(s => !r.done?.[s]);
+  const canFin = finSeat && !r.done?.[finSeat] && (canFinish(r, finSeat) || !legalItems(r, finSeat).length);
+  const it = mine && ui.sel && BYID[ui.sel];
+  const forWho = Store.live ? "" : ` <span class="seat${seat}">(${esc(r.players[seat].name)})</span>`;
+  bar.hidden = false; document.body.classList.add("hasdock"); bar.className = "dock" + (mine ? " mine" : "");
+  bar.innerHTML = `<div class="dclock js-clock">${r.settings.timer ? fmt(r.paused ? (r.pausedLeft ?? r.settings.timer * 1000) : Math.max(0, deadline(r) - now())) : "∞"}</div>
+    <div style="flex:1;min-width:150px">
+      <div class="dwho">${mine ? `Your turn${forWho}` : `<span class="seat${seat}">${esc(r.players[seat].name)}</span> is picking`}</div>
+      <div class="dsub">${it ? `Selected: <b>${esc(it.n)}</b>` : mine ? "Tap an item in the pool, then lock it in." : mySeats(r).length ? (r.done?.[mySeats(r)[0]] ? "You finished drafting." : "Wait for your turn.") : "You're watching."}${next ? ` · next: <span class="seat${next}">${esc(r.players[next].name)}</span>` : " · last pick"}</div>
+    </div>
+    ${it ? `<button type="button" class="primary" id="lockin">Lock in</button><button type="button" id="cancelSel">Cancel</button>` : ""}
+    ${canFin ? `<button type="button" id="finishDraft" title="Skip your remaining turns">Finish drafting${Store.live ? "" : ` (${esc(r.players[finSeat].name)})`}</button>` : ""}`;
+  document.title = (mine ? "● Your turn · " : "") + "Megadraft Board";
+  const li = document.getElementById("lockin");
+  if (li) li.onclick = async () => {
+    if (ui.busy) return; ui.busy = true; li.disabled = true;
+    const want = ui.sel;
+    const ok = await Store.mutate(id, x => x.picks.length === i && curSlot(x) === k ? applyPick(x, want, false) : null).catch(() => false);
+    ui.busy = false; ui.sel = null;
+    if (!ok) toast("That pick didn't go through because the board changed. Try again."); render(true);
+  };
+  const c = document.getElementById("cancelSel"); if (c) c.onclick = () => { ui.sel = null; render(true) };
+  const fd = document.getElementById("finishDraft");
+  if (fd) fd.onclick = () => confirmInline(fd, "Skip the rest of your picks?", async () => {
+    const ok = await Store.mutate(id, x => finishSeat(x, finSeat)).catch(() => false);
+    if (!ok) toast("Couldn't finish. Try again."); ui.sel = null;
+  });
 }
 
 function armyText(r, s) {
@@ -627,8 +767,9 @@ function attackView(id, r) {
     </div>`;
   };
   return `
-    <div class="note" style="margin-bottom:12px">Draft complete. Train only your picks; your Clan Castle can hold drafted items only. Send each other friendly challenges and start both attacks in the same 15-minute window.</div>
-    <div class="grid2">${["A", "B"].map(s => `<section class="panel roster ${s}"><div class="head"><span class="name seat${s}">${esc(r.players[s].name)}</span><span class="spacer"></span><button type="button" data-copy="${s}">Copy army</button></div>${rosterHTML(r, s)}</section>`).join("")}</div>
+    <div class="note" style="margin-bottom:12px">Draft complete. Use <b>Build army link</b> to set up your army and copy it straight into the game. Train only your picks; your Clan Castle can hold your own drafted items only. Send each other friendly challenges and start both attacks in the same 15-minute window.</div>
+    <details data-k="rules" class="panel rules" style="margin-bottom:12px"><summary><b>Rules</b></summary>${rulesHTML(r)}</details>
+    <div class="grid2">${["A", "B"].map(s => `<section class="panel roster ${s}"><div class="head"><span class="name seat${s}">${esc(r.players[s].name)}</span><span class="spacer"></span>${canActFor(r, s) || !Store.live ? `<a class="btn primary" href="#army-${id}-${s}">Build army link</a>` : ""}<button type="button" data-copy="${s}">Copy list</button></div>${rosterHTML(r, s)}</section>`).join("")}</div>
     <section class="panel stack" style="margin-top:12px">
       <h2>Results</h2>
       <div class="grid2">${resBox("A")}${resBox("B")}</div>
@@ -651,15 +792,107 @@ function bindAttack(id, r) {
   const rm = document.getElementById("rematch");
   if (rm) rm.onclick = () => confirmInline(rm, "Same players, new pool?", async () => {
     const n = structuredClone(r);
-    Object.assign(n, { name: r.name.replace(/ \(rematch\)$/, "") + " (rematch)", createdAt: now(), phase: "lobby", first: null, pool: genPool(r.th, r.size), picks: [], turnStart: null, paused: false, pausedLeft: null, results: { A: null, B: null } });
+    Object.assign(n, { name: r.name.replace(/ \(rematch\)$/, "") + " (rematch)", createdAt: now(), phase: "lobby", first: null, turn: 0, done: {}, pool: genPool(r.th, r.size, r.players, r.settings), picks: [], turnStart: null, paused: false, pausedLeft: null, results: { A: null, B: null } });
     const nid = await Store.create(n); location.hash = "r-" + nid;
   });
+}
+
+/* ---------- army builder ---------- */
+// In-game "copy army" link. Sections: h heroes, i CC troops, d CC spells, u troops (siege included), s spells.
+function armyLink(a) {
+  const sec = [];
+  const hs = a.heroes.filter(h => h.h && HEROES[h.h]).map(h => {
+    let s = "" + HEROES[h.h].aid;
+    if (h.pet && PETBY[h.pet]) s += "p" + PETBY[h.pet].aid;
+    const e = (h.eq || []).filter(id => EQUIP[id]).map(id => EQUIP[id].aid);
+    if (e.length) s += "e" + e.join("_");
+    return s;
+  });
+  if (hs.length) sec.push("h" + hs.join("-"));
+  const part = (k, o) => { const e = Object.entries(o || {}).filter(([id, n]) => n > 0 && BYID[id]).map(([id, n]) => `${n}x${BYID[id].aid}`); if (e.length) sec.push(k + e.join("-")) };
+  part("i", a.cc.u); part("d", a.cc.s); part("u", a.u); part("s", a.s);
+  return "https://link.clashofclans.com/en?action=CopyArmy&army=" + sec.join("");
+}
+const space = (o, siege) => Object.entries(o || {}).reduce((t, [id, n]) => { const it = BYID[id]; if (!it || (it.c === "siege") !== !!siege) return t; return t + n * (siege ? 1 : it.hs || 0) }, 0);
+function renderBuilder(ctx) {
+  let r = null, seat = null, th, troops, spells, sieges, epicIds, key, title, back;
+  if (ctx) {
+    r = Store.rooms[ctx.id];
+    if (!r) { app.innerHTML = Store.loaded ? `<div class="note">This room no longer exists. <a href="#builder">Open the free army builder</a>.</div>` : `<p class="muted">Loading room…</p>`; return }
+    seat = ctx.seat; th = r.th;
+    const mine = picksOf(r, seat);
+    troops = mine.filter(i => i.c === "troop" || i.c === "super"); spells = mine.filter(i => i.c === "spell"); sieges = mine.filter(i => i.c === "siege");
+    epicIds = mine.filter(i => i.c === "epic").map(i => i.id);
+    key = `megadraft-army-${ctx.id}-${seat}`; title = `${esc(r.players[seat]?.name)}'s army`; back = `#r-${ctx.id}`;
+  } else {
+    th = +(ls("megadraft-bth") || 17);
+    troops = ITEMS.filter(i => (i.c === "troop" || i.c === "super") && i.th <= th); spells = eligible(th, "spell"); sieges = eligible(th, "siege");
+    epicIds = EPICS.filter(e => !myLacks().includes(e.id)).map(e => e.id);
+    key = `megadraft-army-th${th}`; title = "Army builder"; back = "#";
+  }
+  const cap0 = CAP[th] || CAP[17];
+  let a; try { a = JSON.parse(ls(key) || "null") } catch (e) { a = null }
+  const heroList = Object.entries(HEROES).filter(([, h]) => h.th <= th).map(([k]) => k);
+  if (!a) a = { u: {}, s: {}, cc: { u: {}, s: {} }, heroes: heroList.slice(0, 4).map(h => ({ h, pet: "", eq: ["", ""] })), cap: cap0.slice() };
+  const save = () => { ls(key, JSON.stringify(a)); renderBuilder(ctx) };
+  const cap = a.cap || cap0;
+  const used = { t: space(a.u), s: space(a.s), g: space(a.u, true), ct: space(a.cc.u), cs: space(a.cc.s), cg: space(a.cc.u, true) };
+  const over = { t: used.t > cap[0], s: used.s > cap[1], g: used.g > 1, ct: used.ct > cap[2], cs: used.cs > cap[3], cg: used.cg > 1 };
+  const ctr = (bucket, it, n) => `<div class="ctr ${n ? "on" : ""}">${img(it, "")}<span class="nm">${esc(it.n)}<small>${it.c === "siege" ? "siege" : (it.hs || 0) + " space"}</small></span>
+    <button type="button" data-step="${bucket}|${it.id}|-1" aria-label="One less">−</button><input type="number" min="0" max="999" value="${n || 0}" data-set="${bucket}|${it.id}" aria-label="${esc(it.n)} count"><button type="button" data-step="${bucket}|${it.id}|1" aria-label="One more">+</button></div>`;
+  const get = b => b === "u" ? a.u : b === "s" ? a.s : b === "cu" ? a.cc.u : a.cc.s;
+  const meter = (lab, u, c, o) => `<span class="meter ${o ? "over" : ""}">${lab} ${u}/${c}</span>`;
+  const usedPets = a.heroes.map(h => h.pet).filter(Boolean);
+  const heroRow = h => {
+    const sel = a.heroes.find(x => x.h === h), H = HEROES[h];
+    const eqs = [...COMMONS.filter(c => c.h === h && c.th <= th), ...epicIds.map(id => EQUIP[id]).filter(e => e && e.h === h)];
+    const eqOpt = (v, other) => `<option value="">No equipment</option>` + eqs.map(e => `<option value="${e.id}" ${v === e.id ? "selected" : ""} ${other === e.id ? "disabled" : ""}>${esc(e.n)}${BYID[e.id] ? " (epic)" : ""}</option>`).join("");
+    const petOpt = v => `<option value="">No pet</option>` + PETS.filter(p => p.th <= th).map(p => `<option value="${p.id}" ${v === p.id ? "selected" : ""} ${v !== p.id && usedPets.includes(p.id) ? "disabled" : ""}>${esc(p.n)}</option>`).join("");
+    return `<div class="herorow"><label class="hn"><input type="checkbox" data-hero="${h}" ${sel ? "checked" : ""} ${!sel && a.heroes.length >= 4 ? "disabled" : ""}><img src="${H.img}" alt="">${esc(H.n)}</label>
+      ${sel ? `<select data-pet="${h}" aria-label="Pet">${petOpt(sel.pet)}</select><select data-eq="${h}|0" aria-label="Equipment 1">${eqOpt(sel.eq[0], sel.eq[1])}</select><select data-eq="${h}|1" aria-label="Equipment 2">${eqOpt(sel.eq[1], sel.eq[0])}</select>` : `<span class="small muted" style="grid-column:span 3">Not brought</span>`}</div>`;
+  };
+  const link = armyLink(a);
+  const empty = !Object.values(a.u).some(n => n > 0) && !Object.values(a.s).some(n => n > 0);
+  const warn = [over.t && "Too many troops for your camps.", over.s && "Too many spells.", over.g && "Only one siege machine fits in the army.", over.ct && "Too many Clan Castle troops.", over.cs && "Too many Clan Castle spells.", over.cg && "Only one siege machine fits in the Clan Castle."].filter(Boolean);
+  const ttl = ctx ? `<span class="th">TH${th}</span><h2 style="margin:0">${title}</h2><span class="muted small">${esc(r.name)}</span>`
+    : `<h2 style="margin:0">${title}</h2><label class="f" style="width:120px">Town Hall<select id="b-th">${TH_LEVELS.map(x => `<option ${x === th ? "selected" : ""}>${x}</option>`).join("")}</select></label>`;
+  app.innerHTML = `<div id="builder">
+    <div class="row" style="margin-bottom:8px"><a href="${back}" class="small muted">← Back</a></div>
+    <div class="row" style="margin-bottom:12px">${ttl}</div>
+    ${ctx ? `<p class="note">Only ${esc(r.players[seat]?.name)}'s drafted troops, spells, siege and epics are listed, for the army and the Clan Castle. Heroes, pets and common equipment are free.</p>` : `<p class="note">Everything available at TH${th}. Epics you marked as not owned are hidden.</p>`}
+    <section class="panel stack" style="margin-bottom:12px">
+      <div class="row"><b>In-game link</b><span class="spacer"></span>${meter("Troops", used.t, cap[0], over.t)}${meter("Spells", used.s, cap[1], over.s)}${meter("Siege", used.g, 1, over.g)}${meter("CC", used.ct, cap[2], over.ct)}${meter("CC spells", used.cs, cap[3], over.cs)}</div>
+      <input class="linkbox" id="b-link" readonly value="${esc(link)}" aria-label="Army link">
+      <div class="row"><button type="button" class="primary" id="b-copy" ${empty ? "disabled" : ""}>Copy link</button><a class="btn" href="${esc(link)}" target="_blank" rel="noopener" ${empty ? "aria-disabled=\"true\" style=\"pointer-events:none;opacity:.45\"" : ""}>Open in Clash of Clans</a><button type="button" id="b-clear">Clear army</button>
+        <span class="small muted">Open the link on the phone that has the game, then tap Okay to copy the army.</span></div>
+      ${warn.length ? `<div class="err">${warn.join(" ")}</div>` : ""}
+    </section>
+    <section class="panel" style="margin-bottom:12px"><h3>Heroes <span class="muted small">· up to 4, each with a pet and 2 equipment</span></h3>${heroList.map(heroRow).join("")}</section>
+    <section class="panel" style="margin-bottom:12px"><h3>Troops</h3><div class="ctrs">${troops.map(it => ctr("u", it, a.u[it.id])).join("") || `<span class="muted">No troops drafted.</span>`}</div>
+      ${sieges.length ? `<h3 style="margin-top:12px">Siege machine</h3><div class="ctrs">${sieges.map(it => ctr("u", it, a.u[it.id])).join("")}</div>` : ""}
+      <h3 style="margin-top:12px">Spells</h3><div class="ctrs">${spells.map(it => ctr("s", it, a.s[it.id])).join("") || `<span class="muted">No spells drafted.</span>`}</div></section>
+    <section class="panel" style="margin-bottom:12px"><h3>Clan Castle <span class="muted small">· ${ctx ? "only your own picks" : "what you want requested"}</span></h3>
+      <div class="ctrs">${[...troops, ...sieges].map(it => ctr("cu", it, a.cc.u[it.id])).join("")}</div>
+      <h3 style="margin-top:12px">Clan Castle spells</h3><div class="ctrs">${spells.map(it => ctr("cs", it, a.cc.s[it.id])).join("")}</div></section>
+    <details data-k="caps" class="panel"><summary><b>Capacity</b> <span class="muted small">· estimates for TH${th}; change them if yours differ</span></summary>
+      <div class="row" style="margin-top:8px">${["Army camps", "Spell space", "CC troops", "CC spells"].map((l, i) => `<label class="f" style="width:120px">${l}<input type="number" min="0" max="999" value="${cap[i]}" data-cap="${i}"></label>`).join("")}<button type="button" id="b-capreset" style="align-self:flex-end">Reset</button></div></details>
+  </div>`;
+  app.querySelectorAll("[data-step]").forEach(b => b.onclick = () => { const [bk, id, d] = b.dataset.step.split("|"), o = get(bk); o[id] = Math.max(0, (o[id] || 0) + +d); if (!o[id]) delete o[id]; save() });
+  app.querySelectorAll("[data-set]").forEach(inp => inp.onchange = () => { const [bk, id] = inp.dataset.set.split("|"), o = get(bk), v = Math.max(0, Math.min(999, parseInt(inp.value || "0", 10) || 0)); if (v) o[id] = v; else delete o[id]; save() });
+  app.querySelectorAll("[data-hero]").forEach(c => c.onchange = () => { const h = c.dataset.hero; if (c.checked) { if (a.heroes.length < 4) a.heroes.push({ h, pet: "", eq: ["", ""] }) } else a.heroes = a.heroes.filter(x => x.h !== h); a.heroes.sort((x, y) => heroList.indexOf(x.h) - heroList.indexOf(y.h)); save() });
+  app.querySelectorAll("[data-pet]").forEach(s => s.onchange = () => { a.heroes.find(x => x.h === s.dataset.pet).pet = s.value; save() });
+  app.querySelectorAll("[data-eq]").forEach(s => s.onchange = () => { const [h, i] = s.dataset.eq.split("|"); a.heroes.find(x => x.h === h).eq[+i] = s.value; save() });
+  app.querySelectorAll("[data-cap]").forEach(inp => inp.onchange = () => { a.cap = cap.slice(); a.cap[+inp.dataset.cap] = Math.max(0, parseInt(inp.value || "0", 10) || 0); save() });
+  document.getElementById("b-capreset").onclick = () => { a.cap = cap0.slice(); save() };
+  document.getElementById("b-clear").onclick = () => { a.u = {}; a.s = {}; a.cc = { u: {}, s: {} }; save() };
+  document.getElementById("b-copy").onclick = async () => { try { await navigator.clipboard.writeText(link); toast("Link copied.") } catch (e) { const l = document.getElementById("b-link"); l.select(); toast("Copy is blocked here. The link is selected, copy it by hand.") } };
+  const bth = document.getElementById("b-th"); if (bth) bth.onchange = () => { ls("megadraft-bth", bth.value); renderBuilder(null) };
 }
 
 /* ---------- practice bot ---------- */
 // Fills its emptiest category first, prefers bigger troops, and sometimes takes what the other player could still use.
 function botChoice(r, legal) {
-  const seat = seatForPick(r, r.picks.length), st = r.settings, c = counts(r, seat);
+  const seat = turnSeat(r), st = r.settings, c = counts(r, seat);
   const need = { troop: st.troops - c.troop - c.super, spell: st.spells - c.spell, siege: st.sieges - c.siege, epic: st.epics - c.epic };
   const score = it => {
     const cat = it.c === "super" ? "troop" : it.c;
@@ -677,20 +910,20 @@ function fmt(ms) { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}
 setInterval(() => {
   const rt = route(); if (rt.v !== "room") return;
   const r = Store.rooms[rt.id]; if (!r || r.phase !== "draft") return;
-  const c = document.getElementById("clock");
-  if (c && r.settings.timer) {
-    if (r.paused) { c.textContent = "Paused " + fmt(r.pausedLeft ?? r.settings.timer * 1000); c.className = "clock" }
-    else { const left = deadline(r) - now(); c.textContent = fmt(Math.max(0, left)); c.className = "clock" + (left < 10000 ? " low" : "") }
-  }
-  const i = r.picks.length, seat = seatForPick(r, i);
+  if (r.settings.timer) document.querySelectorAll(".js-clock").forEach(c => {
+    const big = c.classList.contains("dclock") ? "dclock" : "clock";
+    if (r.paused) { c.textContent = "Paused " + fmt(r.pausedLeft ?? r.settings.timer * 1000); c.className = big + " js-clock" }
+    else { const left = deadline(r) - now(); c.textContent = fmt(Math.max(0, left)); c.className = big + " js-clock" + (left < 6000 ? " low" : "") }
+  });
+  const i = r.picks.length, k = curSlot(r), seat = turnSeat(r); if (!seat) return;
   // practice bot: the host's device picks for it after a short pause
   if (r.players[seat]?.bot && isHost(r) && !r.paused && r.turnStart && now() - r.turnStart >= 1200) {
-    const bk = rt.id + ":bot:" + i;
+    const bk = rt.id + ":bot:" + i + ":" + k;
     if (!autoTried[bk]) {
       autoTried[bk] = true;
       Store.mutate(rt.id, x => {
-        if (x.phase !== "draft" || x.picks.length !== i || x.paused) return null;
-        const legal = legalItems(x, seatForPick(x, i)); if (!legal.length) return null;
+        if (x.phase !== "draft" || x.picks.length !== i || curSlot(x) !== k || x.paused) return null;
+        const legal = legalItems(x, turnSeat(x)); if (!legal.length) return finishStuck(x, turnSeat(x));
         return applyPick(x, botChoice(x, legal).id, false);
       }).catch(() => { autoTried[bk] = false });
     }
@@ -700,18 +933,23 @@ setInterval(() => {
   const late = now() - d;
   // the picker's own device auto-picks first; the opponent's device covers after 3 s, any viewer after 8 s
   const due = mySeats(r).includes(seat) ? late >= 0 : mySeats(r).length ? late >= 3000 : late >= 8000;
-  const key = rt.id + ":" + i;
+  const key = rt.id + ":" + i + ":" + k;
   if (!due || autoTried[key]) return;
   if (Store.live && !Store.uid) return;
   autoTried[key] = true;
   Store.mutate(rt.id, x => {
-    if (x.phase !== "draft" || x.picks.length !== i || x.paused) return null;
+    if (x.phase !== "draft" || x.picks.length !== i || curSlot(x) !== k || x.paused) return null;
     const dl = deadline(x); if (!dl || now() < dl) return null;
-    const legal = legalItems(x, seatForPick(x, i)); if (!legal.length) return null;
+    const legal = legalItems(x, turnSeat(x)); if (!legal.length) return finishStuck(x, turnSeat(x));
     return applyPick(x, legal[Math.floor(Math.random() * legal.length)].id, true);
   }).catch(() => { autoTried[key] = false });
 }, 250);
 
-Store.listeners.push(() => render());
+Store.listeners.push(() => {
+  const v = route().v;
+  // these pages don't depend on live room changes, and a re-render would wipe what you typed
+  if (v === "create" || v === "builder" || (v === "army" && document.getElementById("builder"))) return;
+  render();
+});
 Store.init().then(() => render(true));
 </script>
