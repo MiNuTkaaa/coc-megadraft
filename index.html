@@ -112,6 +112,7 @@ label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; colo
 @media (prefers-reduced-motion: no-preference) { .tile { transition: transform .08s } .tile:active { transform: scale(.97) } }
 </style>
 
+<script src="firebase-config.js"></script>
 <div class="wrap">
   <header class="top">
     <h1><a href="#">Megadraft</a></h1>
@@ -211,8 +212,10 @@ function poolProblem(th, size, st) {
 }
 
 /* ---------- store: live shared rooms, or this device only ---------- */
+const FIREBASE_SDK = "11.0.2";
+const ROOM_MAX_AGE = 24 * 3600 * 1000; // lists hide rooms older than a day
 const Store = {
-  live: false, db: null, uid: null, isOwner: false, rooms: {}, listeners: [], loaded: false,
+  live: false, backend: "local", db: null, fb: null, uid: null, isOwner: false, rooms: {}, listeners: [], loaded: false,
   emit() { this.listeners.forEach(f => f()) },
   async init() {
     try {
@@ -221,6 +224,10 @@ const Store = {
         if (db) { this.db = db; this.live = true; this.uid = user ? await user.id() : null; this.isOwner = user ? !!(await user.isOwner()) : false }
       }
     } catch (e) { this.live = false }
+    if (this.live) this.backend = "claude";
+    else if (window.MEGADRAFT_FIREBASE?.apiKey) {
+      try { await this.initFirebase(window.MEGADRAFT_FIREBASE); return } catch (e) { console.error(e); toast("Couldn't connect to the room server. Using this device only.") }
+    }
     if (!this.live) {
       try { this.rooms = JSON.parse(ls("megadraft-rooms") || "{}") } catch (e) { this.rooms = {} }
       this.uid = "local"; this.isOwner = true; this.loaded = true; this.emit(); return;
@@ -231,18 +238,46 @@ const Store = {
       const o = {}; snap.docs.forEach(d => { if (d.exists) o[d.id] = d.data() }); this.rooms = o; this.emit();
     }, () => toast("Rooms stopped updating. Reload the page."));
   },
+  async initFirebase(cfg) {
+    const base = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK}/`;
+    const [app, fs, au] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-firestore.js"), import(base + "firebase-auth.js")]);
+    const a = app.initializeApp(cfg);
+    const db = fs.getFirestore(a), auth = au.getAuth(a);
+    if (cfg.emulatorHost) { fs.connectFirestoreEmulator(db, cfg.emulatorHost, cfg.firestorePort || 8085); au.connectAuthEmulator(auth, `http://${cfg.emulatorHost}:${cfg.authPort || 9099}`, { disableWarnings: true }) }
+    const cred = await au.signInAnonymously(auth);
+    this.fb = { fs, db }; this.uid = cred.user.uid; this.live = true; this.backend = "firebase"; this.isOwner = false;
+    const t = setTimeout(() => { if (!this.loaded) toast("Can't reach the rooms yet. Retrying…") }, 10000);
+    fs.onSnapshot(fs.collection(db, "rooms"), snap => {
+      this.loaded = true; clearTimeout(t);
+      const o = {}; snap.forEach(d => { o[d.id] = d.data() }); this.rooms = o; this.emit();
+    }, err => { console.error(err); toast("Rooms stopped updating. Reload the page.") });
+  },
   persist() { if (!this.live) ls("megadraft-rooms", JSON.stringify(this.rooms)) },
   async create(r) {
     const id = "r" + now().toString(36) + Math.random().toString(36).slice(2, 5);
     if (!this.live) { this.rooms[id] = r; this.persist(); this.emit(); return id }
+    if (this.backend === "firebase") { const { fs, db } = this.fb; await fs.setDoc(fs.doc(db, "rooms", id), r); return id }
     await this.db.doc("rooms/" + id).set(r); return id;
   },
-  async remove(id) { if (!this.live) { delete this.rooms[id]; this.persist(); this.emit(); return } await this.db.doc("rooms/" + id).delete() },
+  async remove(id) {
+    if (!this.live) { delete this.rooms[id]; this.persist(); this.emit(); return }
+    if (this.backend === "firebase") { const { fs, db } = this.fb; return fs.deleteDoc(fs.doc(db, "rooms", id)) }
+    await this.db.doc("rooms/" + id).delete();
+  },
   async mutate(id, fn) {
     if (!this.live) {
       const cur = this.rooms[id]; if (!cur) return false;
       const next = fn(structuredClone(cur)); if (!next) return false;
       this.rooms[id] = next; this.persist(); this.emit(); return true;
+    }
+    if (this.backend === "firebase") {
+      // server-side transaction: two players can't both take the same pick
+      const { fs, db } = this.fb, ref = fs.doc(db, "rooms", id);
+      return fs.runTransaction(db, async tx => {
+        const s = await tx.get(ref); if (!s.exists()) return false;
+        const next = fn(structuredClone(s.data())); if (!next) return false;
+        tx.set(ref, next); return true;
+      });
     }
     const ref = this.db.doc("rooms/" + id);
     let got = false;
@@ -280,6 +315,7 @@ function render(force) {
   pendingRender = false;
   const mode = document.getElementById("mode");
   mode.textContent = Store.live ? "Live rooms" : "This device only";
+  mode.title = Store.backend === "firebase" ? "Rooms are stored on the room server" : "";
   mode.className = "mode" + (Store.live ? " live" : "");
   document.getElementById("lockbar").hidden = true;
   const r = route();
@@ -291,7 +327,7 @@ function render(force) {
 app.addEventListener("focusout", () => setTimeout(() => { if (pendingRender) render() }, 0));
 window.addEventListener("hashchange", () => { ui.sel = null; ui.tab = "all"; ui.q = ""; render(true); window.scrollTo(0, 0) });
 const phaseLabel = p => ({ lobby: "Waiting", draft: "Drafting", attack: "Attacks", done: "Finished" }[p] || p);
-const roomsList = () => Object.entries(Store.rooms).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+const roomsList = () => Object.entries(Store.rooms).filter(([, r]) => now() - (r.createdAt || 0) < ROOM_MAX_AGE || mySeats(r).length).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
 function roomRow([id, r], cta) {
   const open = r.phase === "lobby" && !r.players.B;
   return `<a class="mrow" href="#r-${id}">
@@ -317,7 +353,7 @@ function renderHome() {
     ${mine.length ? `<h3>Your rooms</h3><div class="list" style="margin-bottom:16px">${mine.map(e => roomRow(e)).join("")}</div>` : ""}
     <h3>All rooms</h3>
     <div class="list">${all.length ? all.slice(0, 30).map(e => roomRow(e)).join("") : `<div class="note">No rooms yet. Create the first one.</div>`}</div>
-    <p class="note" style="margin-top:16px">${Store.live ? "Rooms update live for everyone on this page. To pick in a draft you must be signed in to Claude with edit access to this page; anyone else can watch." : "Shared rooms aren't available here, so rooms stay on this device and one screen plays both seats."}</p>`;
+    <p class="note" style="margin-top:16px">${Store.backend === "firebase" ? "Rooms are stored on the server and update live for everyone. Send friends this page's link to play. Rooms older than a day drop off the list." : Store.backend === "claude" ? "Rooms update live for everyone on this page. To pick in a draft you must be signed in to Claude with edit access to this page; anyone else can watch." : "No room server is set up, so rooms stay on this device and one screen plays both seats."}</p>`;
 }
 
 /* ---------- create ---------- */
@@ -394,7 +430,7 @@ function renderCreate() {
       players: { A: { name: me, uid: Store.uid }, B: document.getElementById("c-bot").checked ? { name: "Bot", uid: "bot", bot: true } : null },
       settings, size, pool: genPool(th, size), picks: [], turnStart: null, paused: false, pausedLeft: null, results: { A: null, B: null }
     };
-    try { const id = await Store.create(r); location.hash = "r-" + id } catch (err) { toast("Couldn't create the room. You may not have edit access to this page.") }
+    try { const id = await Store.create(r); location.hash = "r-" + id } catch (err) { toast("Couldn't create the room. Check your connection and try again.") }
   };
 }
 
@@ -501,7 +537,7 @@ function bindLobby(id, r) {
     const me = document.getElementById("j-me").value.trim(); ls("megadraft-name", me);
     if (Store.live && !Store.uid) { toast("Sign in to Claude to join."); return }
     const ok = await Store.mutate(id, x => { if (x.phase !== "lobby" || x.players.B) return null; x.players.B = { name: me, uid: Store.uid }; return x }).catch(() => false);
-    if (!ok) toast("Couldn't join. The seat may be taken, or you don't have edit access to this page.");
+    if (!ok) toast("Couldn't join. The seat may already be taken.");
   };
   const lb = document.getElementById("leaveB"); if (lb) lb.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby") return null; x.players.B = null; return x });
   const rr = document.getElementById("reroll"); if (rr) rr.onclick = () => Store.mutate(id, x => { if (x.phase !== "lobby") return null; x.pool = genPool(x.th, x.size); return x });

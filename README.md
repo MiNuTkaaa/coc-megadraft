@@ -20,9 +20,37 @@ Heroes, pets and common equipment are free for everyone. Attacks are played as f
 
 ## Running it
 
-It's one static page: `index.html` plus the `icons/` folder. Open it locally or serve it with GitHub Pages (Settings → Pages → deploy from branch `main`, folder `/`).
+It's a static site (`index.html`, `icons/`, `firebase-config.js`) that keeps rooms on a Firebase server. Firestore stores the rooms and pushes live updates, and anonymous sign-in gives each browser a player id. Rooms live on the server, not in the browser. Picks are written in server-side transactions, so two players can't take the same item.
 
-**Multiplayer:** live shared rooms only work when the page runs as a Claude artifact. Anywhere else, including GitHub Pages, it falls back to **this device only** mode, where rooms are saved in the browser and one screen plays both seats. That mode still works for practice against the bot and for a draft run on a single shared screen. Open rooms on GitHub Pages need a shared backend, such as Firebase or Supabase, plugged into the `Store` object in `tools/template.html`.
+### 1. Set up Firebase (free Spark plan, about 5 minutes)
+
+1. Go to https://console.firebase.google.com and add a project. Analytics isn't needed.
+2. Open **Build → Firestore Database → Create database**. Pick production mode and a region near your players.
+3. On Firestore's **Rules** tab, replace everything with the contents of [`firestore.rules`](firestore.rules) and click **Publish**.
+4. Open **Build → Authentication → Get started → Sign-in method**, then enable **Anonymous**.
+5. Open **Project settings → General → Your apps**, add a **Web app** (`</>`) and copy the config values into [`firebase-config.js`](firebase-config.js): `apiKey`, `authDomain`, `projectId`, `appId`. These values are safe to commit, because Firebase web keys are public and the rules protect the data.
+6. Open **Authentication → Settings → Authorized domains** and add `minutkaaa.github.io`.
+
+### 2. Turn on GitHub Pages
+
+Go to the repo's **Settings → Pages → Build and deployment**, choose **Deploy from a branch**, and select `main`, folder `/ (root)`. The site goes live at https://minutkaaa.github.io/coc-megadraft/.
+
+If `firebase-config.js` is left empty, the app runs in **this device only** mode: rooms stay in the browser and one screen plays both seats. Practice against the bot still works.
+
+### Access rules (`firestore.rules`)
+
+- Anyone can see rooms and watch drafts.
+- Only the host and the seated opponent can change a room, and a newcomer can only take an empty seat.
+- Only the host can delete a room.
+
+### Known limits
+
+- Draft rules (slot caps, turn order) are checked in the browser, not by the server, so a player who edits the page code could cheat. That's fine among friends. A public ladder would need a Cloud Function to validate picks.
+- Old rooms aren't deleted, only hidden from the lists after 24 hours. Delete them from the Firebase console now and then.
+
+### Local testing
+
+Install the Firebase CLI, then run `firebase emulators:start --only firestore,auth --project demo-megadraft` and serve the folder with `python3 -m http.server`. In `firebase-config.js`, set `apiKey: "demo-key"`, `projectId: "demo-megadraft"`, `emulatorHost: "127.0.0.1"`.
 
 ## Updating game data
 
