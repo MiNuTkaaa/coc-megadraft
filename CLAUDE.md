@@ -79,6 +79,8 @@ The `Store` object picks a backend at startup:
 2. **Firebase Firestore**, when `window.MEGADRAFT_FIREBASE.apiKey` is set. It signs in anonymously, listens to the `rooms` collection with `onSnapshot`, and every write is a `runTransaction`, so two players can't take the same pick. The SDK (11.0.2) is imported from gstatic. Setting `emulatorHost` in the config points the app at the local emulators.
 3. **localStorage**, when neither is available. Labeled "This device only".
 
+Rendering: `app` and `#lockbar` have an `innerHTML` setter that patches the DOM in place (`morph`), so taps and picks don't rebuild the page and icons don't flash. It clears `onclick`/`onchange`/`oninput`/`onsubmit` on reused elements, so views must bind handlers with those properties after each render (not `addEventListener`).
+
 `Store.mutate(id, fn)` takes a pure function that returns the new room, or `null` to abort. All game logic goes through it.
 
 ### Room document
@@ -90,13 +92,24 @@ The `Store` object picks a backend at startup:
   size: { troop, super, spell, siege, epic },                   // pool size per category (autoSize)
   pool: [itemId], picks: [{id, seat, auto, at, slot}],
   first, turn, done: {A?, B?}, turnStart, paused, pausedLeft,
+  previewUntil, armyUntil,
   rerolls, reroll: {by, at} | null, results: {A: {stars, pct, time}, B} }
 ```
 
+### Look and home page (`renderHome`)
+
+- Every page uses the navy sticker-album style (Bowlby One + Rubik), rolled out to the whole site on 2026-11-14. The `--h*` and `--c-*` tokens live on `body`. The older tokens (`--fg`, `--panel`, `--line`, ...) mean "on the navy" at `:root`, and the light cards (`.panel`, `.status`, `.dock`, `.mrow`, `.hpanel`, `.hrooms`, ...) flip them back to dark ink. Pool tiles, roster chips and builder units get a category-coloured underline through `--cc`. The "sticker-album theme for every page" CSS block holds the overrides.
+- The top shows one draft (`featured`): a room the visitor tapped in the list (`ui.hsel`), else a live draft (the visitor's own first, then the most recently active), else the last finished draft, else an empty, dimmed board ("No drafts right now", `emptyHero`). There is no example draft (Mikhail removed it, 2026-11-13).
+- Tapping a room row pins its board at the top without leaving the page, and that room leaves the list until it's unpinned (Unpin button). The pinned board has a button that opens the room (Watch live, View room, Open room or Join).
+- Each row's button comes from `roomAction`: Open (your room), Join (open seat), Watch (someone else's lobby or draft) or View (attacks or finished). Watch opens the room page read-only, updating live. Signed-in admins also get Delete on every row.
+- Each row's strip is the whole snake, one cell per pick, coloured by what was taken: troop yellow, super troop orange-red, spell blue, siege green, epic equipment purple (`--c-*` tokens). The next pick blinks navy.
+- Actions: Create room, Join, Practice (opens Create with the bot ticked via `ui.practice`). The free army builder (`#builder`) was removed from the menu and the route; the per-room builder (`#army-<room>-<seat>`) stays.
+
 ### Flow
 
-1. **Create** (`renderCreate`): name, Town Hall (default 18), picks per player, timer (default 20 s), and an optional practice bot. Pool sizes come from `autoSize`: about 1.5x what both players draft, plus at least 2 spare (1.25x for epics), capped at what exists at that TH. The defaults (7 troops, 2 supers, 4 spells, 1 siege, 4 epics) give 15 / 6 / 12 / 4 / 10.
+1. **Create** (`renderCreate`): name, Town Hall chips (default 18), +/- steppers for picks per player and the timer (default 20 s, 5 s steps, 0 = off), and a live summary card (each player's slots, the pool). The form state lives in `ui.cr`, so live re-renders don't reset it. There is no bot checkbox: the home Practice button sets `ui.practice`, which opens the same screen as "Practice draft" with the bot seated. Pool sizes come from `autoSize`: about 1.5x what both players draft, plus at least 2 spare (1.25x for epics), capped at what exists at that TH. The defaults (7 troops, 2 supers, 4 spells, 1 siege, 4 epics) give 15 / 6 / 12 / 4 / 10.
 2. **Lobby** (`lobbyView`): the opponent joins. Each seated player sees the rules, ticks the epic equipment they don't own (`lacks`, remembered in localStorage) and presses **Ready**. When both are ready, `startDraft` deals the pool, flips a coin for first pick and starts the draft. The pool doesn't exist before this point.
+   - **Board preview**: the first 30 s (`PREVIEW_MS`) are for looking only. `previewUntil` is set and `turnStart` equals it, so the pick timer starts after the preview. `applyPick` refuses picks while `inPreview(r)`. A new pool from Change pool gets a fresh preview.
 3. **Draft** (`draftView`/`bindDraft`): only the board. Rules and checkboxes are gone.
    - Snake order (`seqSeat`): F, O, O, F, F, O, O, ... `curSlot` skips seats that are full or finished, and `turnSeat` gives whose turn it is.
    - Legality is checked by `whyIllegal`: slot caps, max 2 supers, max 2 epics per hero, no epics the player lacks, no item already taken.
@@ -104,24 +117,40 @@ The `Store` object picks a backend at startup:
    - **Change pool**: either player asks, the timer pauses, and the other must Accept or Decline. Accepting deals a new pool and restarts the picks. The limit is `MAX_REROLLS` = 2 per room. In practice or one-screen mode it happens straight away.
    - **Timer**: at 0, the picker's own device auto-picks a random legal item, then the opponent's device after 3 s, then a spectator's after 8 s (`setInterval` tick). The bot is driven by the host's device (`botChoice`).
    - A bottom dock shows the clock, whose turn it is, Lock in and Finish drafting. The tab title says "Your turn".
-4. **Attack** (`attackView`): both rosters, "Build army link", a results form (stars, %, seconds left; `winner` compares them in that order), rematch, and close room.
+4. **Attack** (`attackView`): `checkEnd` sets `armyUntil` = now + 3 min (`ARMY_MS`). A countdown shows on the room page and in the builder, and the builder locks when it reaches 0. The link can still be copied.
+   Also on this page: both rosters, "Build army link", a results form (stars, %, seconds left; `winner` compares them in that order), rematch, and close room.
 
 ### Epic pool rule
 
-`genPool` deals epics **only from those every (non-bot) player owns**, up to `size.epic` (10). If fewer qualify, it deals all of them. Example: Mikhail owns 12 and his opponent owns 8 of those, so all 8 go on the board.
+**Epic race with flex picks** (Mikhail's choice, 2026-11-14): both players keep the full epic cap (4). Once the pool has no epic a seat could still take (`epicsOpenFor` counts untaken, owned epics under the 2-per-hero limit), each of that seat's unfilled epic slots becomes a flex pick (`flexOf`/`flexLeft`): one more troop or spell over the 7/4 caps. The super, siege and per-hero limits don't change. So with 6 epics split 4 and 2, both players still make 16 picks. The roster shows unused flex slots as purple "flex" chips, and the lobby rules explain it. `seatSlots`/`shownPicks` show fewer slots only for a seat that finished early.
 
-### Army builder (`renderBuilder`, routes `#army-<roomId>-<seat>` and `#builder`)
+`genPool` deals epics **only from those every (non-bot) player owns**, up to `size.epic` (10). If fewer qualify, it deals all of them, rounded down to an even number so both players can take the same amount. Example: 8 shared gives 8, 7 shared gives 6.
+
+Every category is dealt purely at random with a plain shuffle. There's no air/ground guarantee.
+
+### Army builder (`renderBuilder`, route `#army-<roomId>-<seat>`)
 
 - Built in the in-game style: Army and Clan Castle tabs, capacity bars, and a tray of chosen units (tap one to remove it). Tapping a unit below adds one.
 - A unit that doesn't fit the remaining space is greyed out and can't be added, so capacity is a hard limit.
 - In a room, only that player's drafted troops, spells and epics are offered, for the army and the Clan Castle. Regular and super troops sit in separate sections.
-- Siege machines never go in the army. In a room, the drafted siege is placed in the Clan Castle automatically and can't be removed. In the free builder, sieges are picked on the Clan Castle tab.
+- Siege machines never go in the army. In a room, the drafted siege is placed in the Clan Castle automatically and can't be removed.
 - Heroes: 4 fixed slots. Tap an empty slot to choose a hero. Tap a filled slot to pick 2 equipment and a pet from icon grids, change the hero, or remove it. Heroes, pets (one per hero) and common equipment are free.
 - `CAP[th]` = [army camps, spells, CC troops, CC spells, CC sieges]. TH18 = 352 / 11 / 55 / 4 / 2 (from Mikhail). TH12-17 were researched in 2026-11 (coc.guide, cocmap, clasher.us); TH16+ allow 2 CC sieges.
 - The army itself takes 1 siege. The saved army lives in localStorage per room and seat.
 - `armyLink` builds `https://link.clashofclans.com/en?action=CopyArmy&army=` + `h<heroes>` `i<CC troops>` `d<CC spells>` `u<troops incl. siege>` `s<spells>`. Units are written `countxaid`, joined by `-`.
   - A hero is written `heroAid[p<petAid>][e<eq1>_<eq2>]`, and heroes are joined by `-`.
   - This format comes from the coc.py library and **hasn't been verified in-game yet**.
+
+### Admin panel (`#admin`, `renderAdmin`)
+
+- Username `admin` maps to the Firebase email/password account `admin@coc-megadraft.app` (`ADMIN_EMAIL`). Firebase checks the password; it is not stored in the page.
+- When signed in, the admin sees every room (including ones older than a day), can watch any room, delete one, or delete all rooms older than a day. The admin can also delete from inside a room.
+- `firestore.rules` has `isAdmin()` (auth email = the admin email), which allows update and delete on any room.
+- Setup in the Firebase console:
+  1. Authentication > Sign-in method: enable Email/Password.
+  2. Authentication > Users: add `admin@coc-megadraft.app` with the admin password.
+  3. Firestore > Rules: publish the repo's `firestore.rules`.
+- The admin signs in on a second Firebase app instance (`Store.adm`, app name "admin"), separate from the player's anonymous session (`Store.fb`). That lets the same browser play and administer at once. Deletes go through the admin session when `Store.isAdmin`.
 
 ### Roles
 
@@ -135,7 +164,7 @@ The `Store` object picks a backend at startup:
 - **Read:** anyone.
 - **Create:** a signed-in user who sets themselves as `hostUid` and as player A.
 - **Update:** the host, the seated player B, or a newcomer taking the empty B seat. `hostUid` can't change.
-- **Delete:** the host only.
+- **Delete:** the host or the admin. The admin can also update any room.
 - Draft legality is checked in the browser only. That's fine among friends. A public ladder would need a Cloud Function.
 - Rooms older than 24 h are hidden from the lists but not deleted.
 

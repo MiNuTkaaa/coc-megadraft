@@ -5,31 +5,23 @@
 <title>Megadraft Board</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Rubik:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
 /* Layout: lobby (create / join with Town Hall filter) -> room: status bar, two rosters, shared pool grid, sticky lock-in bar. */
 :root {
-  --bg: #eef1f4; --panel: #ffffff; --panel2: #e3e8ee; --fg: #17202b; --muted: #5b6878;
-  --line: #cfd7e0; --accent: #c8501e; --accent-fg: #ffffff;
-  --a: #1f6fd1; --a-soft: #dce9fa; --b: #b2287a; --b-soft: #f6dcec;
-  --ok: #1d7a45; --warn: #a86a00; --bad: #b3261e;
-  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body: "Inter", system-ui, -apple-system, sans-serif;
+  /* Navy album ground: tokens for text and controls sitting directly on the navy. Cards reset them (see .card-ctx below). */
+  --bg: rgba(255,255,255,.08); --panel: #f4f6ff; --panel2: rgba(255,255,255,.1); --fg: #ffffff; --muted: #aab6f0;
+  --line: rgba(255,255,255,.16); --accent: #ffc928; --accent-sh: #b88a00; --accent-fg: #0f1840; --sel: #ffc928;
+  --a: #ffc928; --a-line: #ffc928; --a-soft: rgba(255,201,40,.16); --b: #ff8a78; --b-line: #ff6a55; --b-soft: rgba(255,106,85,.18);
+  --ok: #6ee7a8; --warn: #ffc928; --bad: #ff8a78;
+  --display: "Bowlby One", system-ui, sans-serif;
+  --body: "Rubik", system-ui, -apple-system, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #12161c; --panel: #1b2129; --panel2: #232b35; --fg: #e8edf3; --muted: #95a2b3;
-  --line: #2e3844; --accent: #f07a42; --accent-fg: #1a0d05;
-  --a: #6aa8ff; --a-soft: #1c2e4a; --b: #f07ac0; --b-soft: #45203a;
-  --ok: #4fc483; --warn: #e3a63a; --bad: #ff7a70; color-scheme: dark } }
-:root[data-theme="dark"] {
-  --bg: #12161c; --panel: #1b2129; --panel2: #232b35; --fg: #e8edf3; --muted: #95a2b3;
-  --line: #2e3844; --accent: #f07a42; --accent-fg: #1a0d05;
-  --a: #6aa8ff; --a-soft: #1c2e4a; --b: #f07ac0; --b-soft: #45203a;
-  --ok: #4fc483; --warn: #e3a63a; --bad: #ff7a70; color-scheme: dark }
 * { box-sizing: border-box }
 [hidden] { display: none !important }
-body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.45 }
+body { line-height: 1.45 }
 .wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 14px 110px }
 header.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px }
 header.top h1 { font-family: var(--display); font-weight: 800; font-size: 22px; margin: 0; letter-spacing: -.01em }
@@ -185,13 +177,283 @@ body.hasdock .wrap { padding-bottom: 120px }
 .heroes { display: flex; gap: 6px; flex-wrap: wrap }
 .heroes img { width: 30px; height: 30px; border-radius: 6px }
 @media (prefers-reduced-motion: no-preference) { .tile { transition: transform .08s } .tile:active { transform: scale(.97) } }
+
+
+/* ---------- sticker-album theme for every page ---------- */
+/* Light "album page" cards: tokens flip back to dark ink on a pale page. */
+.panel, .status, .dock, .lockbar, .mrow, .hpanel, .toast, .bigbtn, .hrooms {
+  --bg: #ffffff; --panel: #ffffff; --panel2: #e3e8fb; --fg: #0f1840; --muted: #4a5585; --line: #c9d2f3;
+  --sel: #2a49d0; --a: #8f6400; --a-soft: #fff4cc; --b: #d8432f; --b-soft: #ffe4df;
+  --ok: #1e9e62; --warn: #a86a00; --bad: #c7321f; color-scheme: light; color: var(--fg) }
+h2 { font: 22px/1.15 var(--display); margin: 0 0 12px; letter-spacing: .005em }
+.panel h2 { font-size: 20px }
+h3 { font-family: var(--body); font-weight: 700; letter-spacing: .08em }
+.panel { background: #f4f6ff; border: 0; border-radius: 22px; padding: 20px; box-shadow: 0 14px 40px rgba(0,4,30,.45) }
+.mrow { background: #f4f6ff; border: 0; border-radius: 16px; padding: 12px 14px; box-shadow: 0 6px 18px rgba(0,4,30,.35) }
+.mrow:hover { box-shadow: 0 0 0 3px var(--hyou), 0 6px 18px rgba(0,4,30,.35) }
+a { color: inherit }
+.muted a, a.muted { color: var(--muted) } a.muted:hover { color: var(--fg) }
+button, .btn { font-family: var(--body); font-weight: 700; border: 0; background: var(--panel2); color: var(--fg); padding: 10px 16px; border-radius: 12px; box-shadow: 0 3px 0 rgba(0,4,30,.18) }
+button:hover, .btn:hover { filter: brightness(1.06) }
+button:active, .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,4,30,.18) }
+.primary { background: var(--hyou) !important; color: var(--hdark) !important; box-shadow: 0 4px 0 var(--hyou-sh) !important }
+button.danger { color: var(--bad) }
+button:disabled { box-shadow: none; transform: none; filter: none }
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid var(--hyou); outline-offset: 3px }
+.panel :focus-visible, .dock :focus-visible, .status :focus-visible { outline-color: var(--hacc) }
+input, select { background: var(--bg); border: 2px solid var(--line); border-radius: 11px; padding: 9px 11px }
+input:focus, select:focus { border-color: var(--sel); outline: none }
+input[type=checkbox] { accent-color: var(--hacc); width: 17px; height: 17px }
+label.f { font-weight: 600 }
+.pill { font: 11px/1 var(--display); letter-spacing: .02em; padding: 5px 8px; border-radius: 7px; text-transform: none }
+.pill.lobby { background: var(--hok); color: #fff } .pill.draft { background: var(--hacc); color: #fff } .pill.attack { background: var(--hopp); color: #fff } .pill.done { background: var(--hdark2); color: #fff }
+.th { font: 12px/1 var(--display); padding: 6px 8px; border-radius: 8px; background: var(--hyou); color: var(--hdark); transform: rotate(-3deg); display: inline-block }
+.seatA { color: var(--a) } .seatB { color: var(--b) }
+.chips button { box-shadow: none; padding: 7px 13px; border-radius: 999px; background: var(--panel2) }
+.chips button.on { background: var(--hacc); color: #fff }
+/* room header */
+.steps span { font-weight: 600; background: rgba(255,255,255,.08); color: var(--muted); padding: 6px 12px }
+.steps span.on { background: var(--hyou); color: var(--hdark) }
+.status { background: #f4f6ff; border: 0; border-radius: 20px; padding: 14px 18px; box-shadow: 0 14px 40px rgba(0,4,30,.45) }
+.status.turnA { box-shadow: inset 6px 0 0 var(--hyou), 0 14px 40px rgba(0,4,30,.45) }
+.status.turnB { box-shadow: inset 6px 0 0 var(--hopp), 0 14px 40px rgba(0,4,30,.45) }
+.status .who, .roster .name, .dock .dwho, .win, .bigbtn b { font-family: var(--display); font-weight: 400 }
+.clock, .dock .dclock { font-family: var(--display); font-weight: 400 }
+/* rosters as sticker pages */
+.roster { border-top: 0; box-shadow: inset 0 6px 0 var(--hyou), 0 14px 40px rgba(0,4,30,.45) }
+.roster.B { box-shadow: inset 0 6px 0 var(--hopp), 0 14px 40px rgba(0,4,30,.45) }
+.roster .name { font-size: 20px }
+.cat { border-top: 2px dashed var(--line) }
+.chip { background: #fff; border-radius: 9px; padding: 3px 8px 3px 3px; font-weight: 600; box-shadow: 0 2px 0 rgba(15,24,64,.1), 0 3px 8px rgba(15,24,64,.1); border-bottom: 3px solid var(--cc, transparent) }
+.chip img { width: 24px; height: 24px }
+.chip.empty { background: var(--hslot); border: 2px dashed var(--hline); box-shadow: none; color: var(--hline); font-weight: 600 }
+.chip.last { outline: 3px solid var(--sel) }
+.chip.empty.flex { border-color: var(--c-epic); color: var(--c-epic); background: #f1e8fb }
+/* pool tiles as stickers */
+.pool { gap: 10px }
+.tile { border: 3px solid #fff; border-radius: 14px; background: #fff; box-shadow: 0 2px 0 rgba(15,24,64,.1), 0 6px 14px rgba(15,24,64,.14); font-weight: 600; cursor: pointer }
+.tile::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -3px; height: 4px; border-radius: 2px; background: var(--cc, transparent) }
+.tile:hover:not(.blocked) { transform: translateY(-2px) rotate(-1deg) }
+.tile .pic { width: 56px; height: 56px }
+.tile.sel { border-color: var(--hacc); box-shadow: 0 0 0 3px var(--hacc), 0 8px 18px rgba(42,73,208,.3) }
+.tile.takenA { background: var(--a-soft); border-color: var(--hyou) }
+.tile.takenB { background: var(--b-soft); border-color: var(--hopp) }
+.tile .own { font: 11px/1 var(--display); top: 6px; right: 7px } .tile.takenA .own { color: #8f6400 } .tile.takenB .own { color: var(--b) }
+.sectionlab { font-weight: 700; letter-spacing: .08em }
+/* dock */
+.dock { background: #f4f6ff; border: 0; border-radius: 22px; box-shadow: 0 16px 40px rgba(0,4,30,.55); padding: 12px 16px }
+.dock .dclock { font-size: 28px }
+.dock.mine { border: 0; box-shadow: 0 0 0 4px var(--hyou), 0 16px 40px rgba(0,4,30,.55) }
+@media (prefers-reduced-motion: no-preference) { .dock.mine { animation: hpulse 1.6s ease-in-out infinite } @keyframes hpulse { 50% { box-shadow: 0 0 0 9px rgba(255,201,40,.35), 0 16px 40px rgba(0,4,30,.55) } } }
+.lockbar { background: #f4f6ff; border-top: 0; box-shadow: 0 -10px 30px rgba(0,4,30,.4) }
+/* lobby */
+.lacks .hg { border: 0; background: #fff; border-radius: 14px; padding: 8px 10px; box-shadow: 0 2px 0 rgba(15,24,64,.08), 0 4px 12px rgba(15,24,64,.08) }
+.rules li::marker { font-weight: 700; color: var(--hacc) }
+/* notes and toasts */
+.note { border-radius: 14px; padding: 10px 14px; font-size: 13px; background: var(--panel2) }
+.toast { background: var(--hyou); color: var(--hdark); border-radius: 12px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,4,30,.4) }
+.log div { border-bottom: 1px dashed var(--line) }
+.bigbtn { background: #f4f6ff; border: 0; border-radius: 18px }
+/* army builder: the in-game panel, in album navy */
+.army { background: #0a134a; background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.07) 1px, transparent 0); background-size: 18px 18px; border-radius: 22px; padding: 16px; box-shadow: 0 14px 40px rgba(0,4,30,.45), inset 0 0 0 2px rgba(255,255,255,.06) }
+.army .tabs button { background: rgba(255,255,255,.1); box-shadow: none }
+.army .tabs button.on { background: var(--hyou); color: var(--hdark); box-shadow: 0 3px 0 var(--hyou-sh) }
+.capbar { font-family: var(--display); font-weight: 400 }
+.capbar .bar { height: 10px; background: rgba(255,255,255,.12) }
+.capbar .bar i { background: var(--hyou) } .capbar.full .bar i { background: #6ee7a8 }
+.tray { background: rgba(255,255,255,.05); border: 2px dashed rgba(255,255,255,.14); border-radius: 14px }
+.unit { border: 3px solid #fff; border-radius: 12px; background: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.25) }
+.unit::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 0; height: 4px; border-radius: 2px; background: var(--cc, transparent) }
+.unit.spell, .unit.siege { background: #fff }
+.unit:not(:disabled):hover { border-color: var(--hyou) }
+.unit .cnt { font-family: var(--display); font-weight: 400; color: var(--hdark); text-shadow: 0 0 3px #fff, 0 0 3px #fff }
+.unit .sp { color: var(--hdark); text-shadow: 0 0 3px #fff, 0 0 3px #fff }
+.hslot { border: 3px solid #fff; background: #fff; border-radius: 16px; box-shadow: 0 2px 0 rgba(15,24,64,.1), 0 6px 14px rgba(15,24,64,.12); cursor: pointer }
+.hslot.on { border-color: var(--hacc); box-shadow: 0 0 0 3px var(--hacc) }
+.hslot .hn2 { font-weight: 700 }
+.hslot .gear span { border: 2px dashed var(--hline); background: var(--hslot) }
+.hpanel { background: #fff; border: 0; border-radius: 16px; box-shadow: inset 0 0 0 2px var(--line) }
+.ico { border: 3px solid #fff; background: #fff; border-radius: 12px; box-shadow: 0 2px 0 rgba(15,24,64,.1), 0 4px 10px rgba(15,24,64,.1); font-weight: 600 }
+.ico.on { border-color: var(--hacc); background: #e8edff }
+.ico.epic::after { color: var(--c-epic); font-weight: 700 }
+.linkbox { background: #fff }
+.hslots { grid-template-columns: repeat(4, minmax(0, 1fr)) }
+.hslot { min-width: 0 } .hslot .hb { max-width: 100% }
+@media (max-width: 480px) { .hslot .hb { width: 52px; height: 52px } .hslot .gear img, .hslot .gear span { width: 20px; height: 20px } .hslot .hn2 { font-size: 11px } }
+input, select { font-weight: 500 }
+/* player names on light cards: dark ink with a seat-coloured highlighter stroke */
+.panel .seatA, .status .seatA, .dock .seatA, .roster .name.seatA { color: var(--fg); box-shadow: inset 0 -.38em 0 rgba(255,201,40,.75) }
+.panel .seatB, .status .seatB, .dock .seatB, .roster .name.seatB { color: var(--fg); box-shadow: inset 0 -.38em 0 rgba(255,106,85,.45) }
+
+
+/* create room */
+.cr-top { margin-bottom: 10px }
+.cr-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start }
+.cr-grid > * { min-width: 0 }
+.cr-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap }
+.cr-head h2 { margin: 0; font-size: 28px }
+.cr-head .tag { font: 12px/1 var(--display); padding: 6px 9px; border-radius: 7px; transform: rotate(-3deg); background: var(--hacc); color: #fff }
+.cr-head .tag.ex { background: var(--hyou); color: var(--hdark) }
+.cr-lead { margin: 6px 0 18px; font-size: 14px }
+.cr-names { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.cr-sec { margin-top: 18px }
+.cr-th { display: flex; gap: 8px; flex-wrap: wrap }
+.cr-th button { font: 16px/1 var(--display); width: 54px; height: 46px; padding: 0; border-radius: 12px; background: #fff; color: var(--hdark2); box-shadow: 0 2px 0 rgba(15,24,64,.1), 0 4px 10px rgba(15,24,64,.08) }
+.cr-th button.on { background: var(--hyou); color: var(--hdark); box-shadow: 0 4px 0 var(--hyou-sh); transform: rotate(-3deg) }
+.cr-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.cr-step { position: relative; display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 16px; padding: 10px 10px 10px 8px; box-shadow: 0 2px 0 rgba(15,24,64,.1), 0 6px 14px rgba(15,24,64,.1) }
+.cr-step::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: -3px; height: 4px; border-radius: 2px; background: var(--cc) }
+.cr-step img, .cr-clock { width: 44px; height: 44px; object-fit: contain; flex: none }
+.cr-clock { display: grid; place-items: center; color: var(--hacc) } .cr-clock svg { width: 30px; height: 30px }
+.cr-lab { flex: 1; min-width: 0; line-height: 1.15 } .cr-lab b { display: block; font-size: 14px } .cr-lab small { color: var(--muted); font-size: 11.5px }
+.cr-ctl { display: flex; align-items: center; gap: 4px; flex: none }
+.cr-ctl button { width: 34px; height: 34px; padding: 0; border-radius: 10px; font: 20px/1 var(--display); background: var(--hslot); color: var(--hdark) }
+.cr-ctl button:disabled { opacity: .35 }
+.cr-ctl output { font: 20px/1 var(--display); min-width: 46px; text-align: center }
+.cr-side { position: sticky; top: 16px }
+.cr-slots { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px }
+.cr-slots i { aspect-ratio: 1; border-radius: 7px; background: #fff; border-bottom: 4px solid var(--c-troop); box-shadow: 0 2px 6px rgba(15,24,64,.1) }
+.cr-slots i.super { border-color: var(--c-super) } .cr-slots i.spell { border-color: var(--c-spell) } .cr-slots i.siege { border-color: var(--c-siege) } .cr-slots i.epic { border-color: var(--c-epic) }
+.cr-big { margin: 12px 0 2px; font-weight: 600 } .cr-big b { font: 26px/1 var(--display); margin-right: 4px }
+.cr-pool { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px }
+.cr-pool span { background: #fff; border-radius: 10px; padding: 6px 10px; font-size: 12.5px; font-weight: 600; box-shadow: inset 0 -3px 0 var(--cc), 0 2px 6px rgba(15,24,64,.08) }
+.cr-pool b { font: 15px/1 var(--display); margin-right: 5px }
+.cr-go { width: 100%; margin-top: 14px; font-size: 18px; padding: 15px; border-radius: 14px }
+.cr-go:disabled { opacity: .5 }
+@media (max-width: 1000px) { .cr-grid { grid-template-columns: 1fr } .cr-side { position: static } }
+@media (max-width: 620px) { .cr-names, .cr-steps { grid-template-columns: 1fr } .cr-th { gap: 6px; flex-wrap: nowrap } .cr-th button { width: auto; flex: 1 1 0; min-width: 0; height: 42px; font-size: 14px } .cr-head h2 { font-size: 24px } }
+
+/* ---------- home: sticker album, live-first ---------- */
+body { --hg:#101c5c; --hbar:#0a134a; --hink:#fff; --hmut:#aab6f0; --hpage:#f4f6ff; --hslot:#dfe5fb; --hslot2:#d0d8f8; --hline:#aab8ee;
+  --hyou:#ffc928; --hyou-sh:#b88a00; --hopp:#ff6a55; --hdark:#0f1840; --hdark2:#4a5585; --hok:#1e9e62; --hok-sh:#13693f; --hacc:#2a49d0;
+  --c-troop:#f5b800; --c-super:#f0582a; --c-spell:#2f7de1; --c-siege:#1f9e74; --c-epic:#8e44d9;
+  --hdisp:'Bowlby One',system-ui,sans-serif; --hui:'Rubik',system-ui,sans-serif;
+  background:var(--hg); color:var(--hink); font-family:var(--hui); font-size:15px; color-scheme:dark;
+  background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.07) 1px,transparent 0); background-size:18px 18px }
+body ::selection { background:var(--hyou); color:var(--hdark) }
+body .wrap { max-width:1240px; padding-block:0 60px }
+body.hasdock .wrap { padding-bottom:130px }
+body header.top { margin:0 0 22px; padding-block:14px; border-bottom:1px solid rgba(255,255,255,.08) }
+body header.top h1 { font:22px/1 var(--hdisp) }
+body .mode { background:rgba(255,255,255,.08); color:var(--hmut) }
+body .mode.live { color:#6ee7a8 }
+body a:focus-visible, body button:focus-visible { outline:3px solid var(--hyou); outline-offset:3px }
+header.top h1 a { display:inline-flex; align-items:center; gap:10px }
+.logo { display:inline-grid; place-items:center; width:30px; height:30px; border-radius:9px; background:#ffc928; color:#0f1840; font:15px/1 'Bowlby One',system-ui,sans-serif; font-style:normal; transform:rotate(-6deg); box-shadow:0 2px 0 rgba(0,0,0,.25) }
+.hlink { color:var(--muted); text-decoration:none; font-size:13px; font-weight:600 }
+body .hlink { color:var(--hmut) } body .hlink:hover { color:#fff }
+.h-stage { display:grid; gap:22px }
+.h-stage > * { min-width:0 }
+.fh { display:flex; align-items:center; gap:12px; flex-wrap:wrap }
+.fh .tag { font:12px/1 var(--hdisp); padding:6px 9px; border-radius:7px; transform:rotate(-3deg); background:var(--hopp); color:#fff }
+.fh .tag.last { background:var(--hacc) } .fh .tag.ex { background:var(--hyou); color:var(--hdark) }
+.fh h2 { font:22px/1.1 var(--hdisp); margin:0; color:#fff }
+.fh .sub { color:var(--hmut); font-size:14px }
+.ap.quiet { opacity:.55 }
+.fh .go2 { margin-left:auto; color:var(--hyou); font-weight:700; font-size:14px; text-decoration:none }
+.face { display:grid; grid-template-columns:1fr 200px 1fr; gap:18px; align-items:center; margin-top:14px }
+.face > * { min-width:0 }
+.ap { background:var(--hpage); color:var(--hdark); border-radius:22px; padding:18px 18px 20px; box-shadow:0 14px 40px rgba(0,4,30,.55) }
+.ap .who { display:flex; align-items:center; gap:10px; margin-bottom:12px }
+.ap .av { width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font:17px var(--hdisp); flex:none }
+.ap.A .av { background:var(--hyou); color:var(--hdark) } .ap.B .av { background:var(--hopp); color:#fff }
+.ap .nm { font:20px/1.05 var(--hdisp); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.ap small { color:var(--hdark2); font-size:12px }
+.ap.B .who { flex-direction:row-reverse; text-align:right }
+.ap .who > div { min-width:0 }
+.g8 { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:7px }
+.g8 .sk, .g8 .sl { aspect-ratio:1; border-radius:10px; min-width:0; min-height:0 }
+.g8 .sk { background:#fff; border:3px solid #fff; display:grid; place-items:center; position:relative; box-shadow:0 2px 0 rgba(15,24,64,.12),0 6px 12px rgba(15,24,64,.16); transform:rotate(var(--r,0deg)) }
+.g8 .sk img { width:86%; height:86%; min-width:0; object-fit:contain }
+.g8 .sk::after { content:""; position:absolute; left:3px; right:3px; bottom:-3px; height:4px; border-radius:2px; background:var(--cc) }
+.g8 .sk.last { outline:3px solid var(--hyou); outline-offset:1px }
+.ap.B .g8 .sk.last { outline-color:var(--hopp) }
+.g8 .sl { background:var(--hslot); border:2px dashed var(--hline); display:grid; place-items:center; color:var(--hline); font:11px var(--hdisp) }
+.g8 .sl.next { border-color:var(--hopp); background:#ffe4df; color:var(--hopp); animation:hbreathe 1.6s ease-in-out infinite }
+.ap.A .g8 .sl.next { border-color:var(--hyou); background:#fff4cc; color:#8a6500 }
+@keyframes hbreathe { 50% { box-shadow:0 0 0 6px rgba(255,201,40,.3) } }
+.hclock { position:relative; width:180px; height:180px; margin:0 auto; display:grid; place-items:center; text-align:center }
+.hclock svg { position:absolute; inset:0; transform:rotate(-90deg) }
+.hclock .disc { width:132px; height:132px; border-radius:50%; background:#fff; border:6px solid #fff; box-shadow:0 10px 24px rgba(0,0,0,.35); display:grid; place-items:center; color:var(--hdark); transform:rotate(-4deg) }
+.hclock b { font:44px/1 var(--hdisp); display:block }
+.hclock b.sm { font-size:24px }
+.hclock small { font-size:11px; font-weight:700; color:var(--hdark2); text-transform:uppercase; letter-spacing:.06em }
+.picking { text-align:center; color:#fff; font:15px var(--hdisp); margin-top:8px }
+.picking .A { color:var(--hyou) } .picking .B { color:var(--hopp) }
+.exnote { color:var(--hmut); font-size:13px; margin-top:10px }
+.acts { display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:14px }
+.ac { display:flex; align-items:center; gap:12px; padding:14px; border-radius:18px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.14); color:#fff; text-decoration:none; transition:transform .12s }
+.ac:hover { background:rgba(255,255,255,.14) }
+.ac img { width:50px; height:50px; object-fit:contain; flex:none }
+.ac strong { font:17px var(--hdisp); display:block }
+.ac span { font-size:12.5px; color:var(--hmut) }
+.ac.main { background:var(--hyou); border-color:var(--hyou); color:var(--hdark); box-shadow:0 4px 0 var(--hyou-sh) }
+.ac.main span { color:#5a4100; font-weight:600 } .ac.main strong { font-size:22px }
+.ac.main:active { transform:translateY(3px); box-shadow:0 1px 0 var(--hyou-sh) }
+.hrooms { background:var(--hpage); color:var(--hdark); border-radius:22px; padding:20px 22px 12px; box-shadow:0 14px 40px rgba(0,4,30,.55) }
+.hrooms .rh { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap }
+.hrooms h2 { font:22px var(--hdisp); margin:0; color:var(--hdark) }
+.hrooms .rh > span { color:var(--hdark2); font-size:13px }
+.hf { display:flex; gap:6px; margin-left:auto; flex-wrap:wrap }
+.hf button { background:var(--hslot); color:var(--hdark); border:0; font-weight:600; font-size:13px; padding:6px 12px; border-radius:999px }
+.hf button.on { background:var(--hacc); color:#fff }
+.htable { width:100%; border-collapse:collapse; margin-top:10px }
+.htable td { padding:12px 8px; border-top:2px dashed var(--hslot); vertical-align:middle }
+.htable tr[data-hsel] { cursor:pointer }
+.htable tr[data-hsel]:hover td { background:#eaeefc }
+.htable tr.mine td { background:#fff }
+.htable tr.sel td, .htable tr.sel:hover td { background:#fff4cc }
+.hpick { all:unset; cursor:pointer; display:block; font-weight:700 }
+.hpick:focus-visible { outline:3px solid var(--hacc); outline-offset:2px; border-radius:4px }
+.htable td.hact { text-align:right; white-space:nowrap }
+.htable td.hact .hbtn + .hbtn { margin-left:6px }
+.hbtn.hdel { border:0; cursor:pointer; color:#b3261e; background:#fde4e1; font:inherit; font-weight:700; font-size:13px }
+.hbtn.hdel.primary { background:#b3261e !important; color:#fff !important }
+.go2.hback { background:none; border:0; padding:0; cursor:pointer; font:inherit; font-weight:700; font-size:14px } .htable tr.mine td:first-child { border-radius:12px 0 0 12px } .htable tr.mine td:last-child { border-radius:0 12px 12px 0 }
+.htable .nm strong { display:block; font-weight:700 }
+.htable .nm .hpick + small { display:block } .htable .nm small { color:var(--hdark2); font-size:12.5px }
+.htable td.sn { width:32% } .htable td.sn small { display:block; color:var(--hdark2); font-size:12px; margin-top:5px }
+.hduo { position:relative; width:60px; height:44px }
+.hduo i { position:absolute; width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font:14px var(--hdisp); font-style:normal; border:3px solid var(--hpage) }
+.hduo i:first-child { left:0; top:0; z-index:1; background:var(--hyou); color:var(--hdark) }
+.hduo i:last-child { left:24px; top:8px; background:var(--hopp); color:#fff }
+.hduo i.empty { background:var(--hpage); border:2px dashed var(--hline); color:var(--hline) }
+.hst { display:inline-block; font:10px/1 var(--hdisp); padding:4px 6px; border-radius:6px; vertical-align:1px; margin-right:4px; white-space:nowrap }
+.hst.open { background:var(--hok); color:#fff } .hst.lobby { background:var(--hyou); color:var(--hdark) } .hst.draft { background:var(--hacc); color:#fff } .hst.attack { background:var(--hopp); color:#fff } .hst.done { background:var(--hdark2); color:#fff } .hst.prac { background:var(--hslot); color:var(--hdark2) }
+.hbtn { display:inline-block; text-decoration:none; font-weight:700; font-size:13px; padding:9px 15px; border-radius:12px; background:var(--hslot); color:var(--hdark); white-space:nowrap }
+.hbtn:hover { background:var(--hslot2) }
+.hbtn.join { background:var(--hok); color:#fff; box-shadow:0 3px 0 var(--hok-sh) }
+.hbtn.watch { background:var(--hacc); color:#fff; box-shadow:0 3px 0 #16298a } .hbtn.watch:hover { background:#3556e0 }
+.fh .go2 + .go2 { margin-left:0 } .fh .hgo { background:var(--hyou); color:var(--hdark); padding:8px 14px; border-radius:11px; box-shadow:0 3px 0 #b88a00 } .fh .hgo.join { background:var(--hok); color:#fff; box-shadow:0 3px 0 var(--hok-sh) }
+.fh .hback { color:var(--hmut) } .fh .hback:hover { color:#fff }
+.hsnake { display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:2px; height:10px; min-width:120px }
+.hsnake i { border-radius:2px; background:var(--hslot) }
+.hsnake i.troop { background:var(--c-troop) } .hsnake i.super { background:var(--c-super) } .hsnake i.spell { background:var(--c-spell) } .hsnake i.siege { background:var(--c-siege) } .hsnake i.epic { background:var(--c-epic) }
+.hsnake i.now { background:var(--hdark); animation:hblink 1s steps(2) infinite }
+@keyframes hblink { 50% { opacity:.3 } }
+.hleg { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--hdark2); padding:12px 2px 4px; border-top:2px dashed var(--hslot); margin-top:4px }
+.hleg i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:-1px }
+.hempty { text-align:center; padding:26px 10px; color:var(--hdark2) }
+.hempty b { display:block; font:18px var(--hdisp); color:var(--hdark); margin-bottom:4px }
+.hnote { color:var(--hmut); font-size:12.5px; margin-top:4px }
+.hscroll { overflow-x:auto }
+@media (max-width:1000px) { .face { grid-template-columns:1fr 1fr } .face .cl { grid-column:1/-1; grid-row:1 } .acts { grid-template-columns:1fr 1fr } .acts .main { grid-column:1/-1 } }
+@media (max-width:620px) {
+  .face { grid-template-columns:1fr } .hclock { width:140px; height:140px } .hclock .disc { width:104px; height:104px } .hclock b { font-size:34px }
+  .g8 { gap:5px } .acts { grid-template-columns:1fr } .hrooms { padding:16px 14px 8px } .hf { margin-left:0 }
+  .htable td.sn { display:none } .fh .go2 { margin-left:0 }
+  .acts { order:-1 }
+}
+@media (prefers-reduced-motion:reduce) { .g8 .sl.next, .hsnake i.now { animation:none } }
 </style>
 
 <script src="firebase-config.js"></script>
 <div class="wrap">
   <header class="top">
-    <h1><a href="#">Megadraft</a></h1>
+    <h1><a href="#"><i class="logo" aria-hidden="true">M</i>Megadraft</a></h1>
     <span id="mode" class="mode">Connecting…</span>
+    <span class="spacer"></span>
+    <a class="hlink" href="#admin">Admin</a>
   </header>
   <main id="app"><p class="muted">Loading…</p></main>
 </div>
@@ -225,6 +487,10 @@ function autoSize(th, s) {
   return v;
 }
 const MAX_REROLLS = 2;
+const PREVIEW_MS = 30 * 1000;   // look at the board before the first pick
+const ARMY_MS = 3 * 60 * 1000;  // time to build the army after the draft
+const ADMIN_EMAIL = "admin@coc-megadraft.app"; // Firebase email/password account; the username "admin" maps to it
+const inPreview = r => !!r.previewUntil && !r.paused && now() < r.previewUntil;
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const img = (it, cls = "pic") => `<img class="${cls}" src="${it.img}" alt="" loading="lazy" decoding="async">`;
@@ -236,6 +502,20 @@ function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); l
 /* ---------- rules (pure) ---------- */
 const perPlayer = st => st.troops + st.spells + st.sieges + st.epics;
 const totalPicks = r => 2 * perPlayer(r.settings);
+// Epics are a race: both players keep the full epic cap. Once no epic this seat could take is left in the pool,
+// each of its unfilled epic slots becomes a flex pick for one more troop or spell (super, siege and per-hero limits stay).
+// So with 6 epics split 4 and 2, both players still make the same number of picks.
+function epicsOpenFor(r, seat, c = counts(r, seat)) {
+  const lacks = r.players[seat]?.lacks || [];
+  return (r.pool || []).filter(id => { const it = BYID[id]; return it?.c === "epic" && !lacks.includes(id) && !r.picks.some(p => p.id === id) && (c.hero[it.h] || 0) < EPICS_PER_HERO }).length;
+}
+function flexOf(r, seat, c = counts(r, seat)) { return epicsOpenFor(r, seat, c) ? 0 : Math.max(0, r.settings.epics - c.epic) }
+const flexUsed = (r, seat, c = counts(r, seat)) => Math.max(0, c.troop + c.super - r.settings.troops) + Math.max(0, c.spell - r.settings.spells);
+const flexLeft = (r, seat, c = counts(r, seat)) => Math.max(0, flexOf(r, seat, c) - flexUsed(r, seat, c));
+const epicsLeft = r => (r.pool || []).filter(id => BYID[id]?.c === "epic" && !r.picks.some(p => p.id === id)).length;
+// Slots shown on boards and strips: a seat that finished early shows only what it took.
+function seatSlots(r, s) { return r.done?.[s] || (r.pool?.length && r.phase !== "draft") ? picksOf(r, s).length : perPlayer(r.settings) }
+function shownPicks(r) { return seatSlots(r, "A") + seatSlots(r, "B") }
 const seqSeat = (r, k) => { const F = r.first, O = other(F); if (k === 0) return F; return Math.floor((k - 1) / 2) % 2 === 0 ? O : F };
 const picksOf = (r, seat) => r.picks.filter(p => p.seat === seat).map(p => BYID[p.id]).filter(Boolean);
 function counts(r, seat) {
@@ -250,7 +530,7 @@ function turnSeat(r) { const k = curSlot(r); return k < totalPicks(r) ? seqSeat(
 function nextSeat(r) { const N = totalPicks(r); for (let k = curSlot(r) + 1; k < N; k++) { const s = seqSeat(r, k); if (!seatFull(r, s)) return s } return null }
 const minsOf = st => st.min || { troops: Math.max(0, st.troops - 2), spells: Math.max(0, st.spells - 1), epics: Math.max(0, st.epics - 2), sieges: st.sieges };
 function canFinish(r, s) { const m = minsOf(r.settings), c = counts(r, s); return c.troop + c.super >= m.troops && c.spell >= m.spells && c.epic >= m.epics && c.siege >= m.sieges }
-function checkEnd(r) { if (curSlot(r) >= totalPicks(r)) { r.phase = "attack"; r.turnStart = null } return r }
+function checkEnd(r) { if (curSlot(r) >= totalPicks(r)) { r.phase = "attack"; r.turnStart = null; r.armyUntil = now() + ARMY_MS } return r }
 // Used when a seat has nothing legal left to pick, for example every remaining epic is one it doesn't own.
 function finishStuck(r, s) { if (!s) return null; r.done = { ...(r.done || {}), [s]: true }; r.turnStart = now(); return checkEnd(r) }
 function finishSeat(r, s) {
@@ -264,12 +544,12 @@ function whyIllegal(r, seat, it) {
   if (!r.pool.includes(it.id)) return "Not in this room's pool";
   if (it.c === "epic" && r.players[seat]?.lacks?.includes(it.id)) return `${r.players[seat].name} doesn't own ${it.n}`;
   if (r.picks.some(p => p.id === it.id)) return "Already taken";
-  const s = r.settings, c = counts(r, seat);
+  const s = r.settings, c = counts(r, seat), fx = flexLeft(r, seat, c);
   if (it.c === "troop" || it.c === "super") {
-    if (c.troop + c.super >= s.troops) return `Troop slots full (${s.troops})`;
     if (it.c === "super" && c.super >= s.supers) return `Super troop limit reached (${s.supers})`;
+    if (c.troop + c.super >= s.troops && !fx) return `Troop slots full (${s.troops})`;
   }
-  if (it.c === "spell" && c.spell >= s.spells) return `Spell slots full (${s.spells})`;
+  if (it.c === "spell" && c.spell >= s.spells && !fx) return `Spell slots full (${s.spells})`;
   if (it.c === "siege" && c.siege >= s.sieges) return `Siege slot full (${s.sieges})`;
   if (it.c === "epic") {
     if (c.epic >= s.epics) return `Equipment slots full (${s.epics})`;
@@ -279,13 +559,20 @@ function whyIllegal(r, seat, it) {
 }
 const legalItems = (r, seat) => r.pool.map(id => BYID[id]).filter(it => it && !whyIllegal(r, seat, it));
 function deadline(r) { if (!r.settings.timer || r.phase !== "draft" || r.paused || !r.turnStart) return null; return r.turnStart + r.settings.timer * 1000 }
+const clockText = r => {
+  if (inPreview(r)) return "Look " + fmt(r.previewUntil - now());
+  if (!r.settings.timer) return "∞";
+  return r.paused ? "Paused " + fmt(r.pausedLeft ?? r.settings.timer * 1000) : fmt(Math.max(0, deadline(r) - now()));
+};
 function applyPick(r, id, auto) {
-  if (r.phase !== "draft") return null;
+  if (r.phase !== "draft" || inPreview(r)) return null;
   const k = curSlot(r); if (k >= totalPicks(r)) return null;
   const seat = seqSeat(r, k), it = BYID[id];
   if (!it || whyIllegal(r, seat, it)) return null;
   r.picks = [...r.picks, { id, seat, auto: !!auto, at: now(), slot: k }];
   r.turn = k + 1; r.turnStart = now();
+  // a seat with nothing legal left (say the pool ran out of epics) is finished right away, so the draft ends once everything is taken
+  for (let n = 0, ts; n < 2 && r.phase === "draft" && (ts = turnSeat(r)) && !legalItems(r, ts).length; n++) finishStuck(r, ts);
   return checkEnd(r);
 }
 function winner(r) {
@@ -295,8 +582,8 @@ function winner(r) {
 }
 function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
 const eligible = (th, c) => ITEMS.filter(i => i.c === c && i.th <= th);
-// Deal a limited random pool so armies have to overlap. Troops always include some air and some ground.
-// Epics come only from ones at least one seated player owns, topped up so each player can fill their epic picks.
+// Deal a limited, fully random pool so armies have to overlap.
+// Epics come only from ones both players own, and always an even number so both can take the same amount.
 function genPool(th, size, players) {
   const out = [];
   const lacks = [players?.A, players?.B].filter(p => p && !p.bot).map(p => p.lacks || []);
@@ -304,20 +591,17 @@ function genPool(th, size, players) {
     let el = shuffle(eligible(th, c));
     // epics: only ones every player owns; if fewer than the pool size, all of them
     if (c === "epic") el = el.filter(i => !lacks.some(l => l.includes(i.id)));
-    const n = Math.min(size[c], el.length);
-    if (c === "troop") {
-      const air = el.filter(i => i.fly), ground = el.filter(i => !i.fly);
-      const pick = [...air.slice(0, Math.min(3, Math.ceil(n / 4))), ...ground.slice(0, Math.min(5, Math.ceil(n / 2)))];
-      const rest = el.filter(i => !pick.includes(i));
-      out.push(...[...pick, ...rest].slice(0, n).map(i => i.id));
-    } else out.push(...el.slice(0, n).map(i => i.id));
+    let n = Math.min(size[c], el.length);
+    if (c === "epic") n -= n % 2;
+    out.push(...el.slice(0, n).map(i => i.id));
   }
   return out;
 }
 // Both players ready: deal the pool now that we know what everyone owns, flip for first pick, start.
 function startDraft(x) {
   x.pool = genPool(x.th, x.size, x.players);
-  Object.assign(x, { phase: "draft", first: Math.random() < .5 ? "A" : "B", turn: 0, done: {}, picks: [], rerolls: 0, reroll: null, paused: false, pausedLeft: null, turnStart: now() });
+  const start = now() + PREVIEW_MS;
+  Object.assign(x, { phase: "draft", first: Math.random() < .5 ? "A" : "B", turn: 0, done: {}, picks: [], rerolls: 0, reroll: null, paused: false, pausedLeft: null, previewUntil: start, turnStart: start });
   return x;
 }
 function poolProblem(th, size, st) {
@@ -362,13 +646,32 @@ const Store = {
     const a = app.initializeApp(cfg);
     const db = fs.getFirestore(a), auth = au.getAuth(a);
     if (cfg.emulatorHost) { fs.connectFirestoreEmulator(db, cfg.emulatorHost, cfg.firestorePort || 8085); au.connectAuthEmulator(auth, `http://${cfg.emulatorHost}:${cfg.authPort || 9099}`, { disableWarnings: true }) }
-    const cred = await au.signInAnonymously(auth);
-    this.fb = { fs, db }; this.uid = cred.user.uid; this.live = true; this.backend = "firebase"; this.isOwner = false;
+    // the player is always an anonymous account
+    await auth.authStateReady();
+    if (auth.currentUser && !auth.currentUser.isAnonymous) await au.signOut(auth); // older builds signed the admin in here
+    const user = auth.currentUser || (await au.signInAnonymously(auth)).user;
+    this.fb = { fs, db, au, auth }; this.uid = user.uid; this.live = true; this.backend = "firebase"; this.isOwner = false;
+    // the admin signs in on a second, separate Firebase app, so the same browser can still play
+    const b = app.initializeApp(cfg, "admin");
+    const adb = fs.getFirestore(b), aauth = au.getAuth(b);
+    if (cfg.emulatorHost) { fs.connectFirestoreEmulator(adb, cfg.emulatorHost, cfg.firestorePort || 8085); au.connectAuthEmulator(aauth, `http://${cfg.emulatorHost}:${cfg.authPort || 9099}`, { disableWarnings: true }) }
+    this.adm = { db: adb, auth: aauth };
+    aauth.authStateReady().then(() => { this.isAdmin = aauth.currentUser?.email === ADMIN_EMAIL; if (this.isAdmin) this.emit() });
     const t = setTimeout(() => { if (!this.loaded) toast("Can't reach the rooms yet. Retrying…") }, 10000);
     fs.onSnapshot(fs.collection(db, "rooms"), snap => {
       this.loaded = true; clearTimeout(t);
       const o = {}; snap.forEach(d => { o[d.id] = d.data() }); this.rooms = o; this.emit();
     }, err => { console.error(err); toast("Rooms stopped updating. Reload the page.") });
+  },
+  async adminLogin(name, pass) {
+    const { au } = this.fb;
+    if (name.trim().toLowerCase() !== "admin") throw new Error("bad user");
+    await au.signInWithEmailAndPassword(this.adm.auth, ADMIN_EMAIL, pass);
+    this.isAdmin = true; this.emit();
+  },
+  async adminLogout() {
+    await this.fb.au.signOut(this.adm.auth);
+    this.isAdmin = false; this.emit();
   },
   persist() { if (!this.live) ls("megadraft-rooms", JSON.stringify(this.rooms)) },
   async create(r) {
@@ -379,7 +682,8 @@ const Store = {
   },
   async remove(id) {
     if (!this.live) { delete this.rooms[id]; this.persist(); this.emit(); return }
-    if (this.backend === "firebase") { const { fs, db } = this.fb; return fs.deleteDoc(fs.doc(db, "rooms", id)) }
+    // the admin deletes through its own session; everyone else as themselves (rules: host only)
+    if (this.backend === "firebase") { const { fs } = this.fb, db = this.isAdmin ? this.adm.db : this.fb.db; return fs.deleteDoc(fs.doc(db, "rooms", id)) }
     await this.db.doc("rooms/" + id).delete();
   },
   async mutate(id, fn) {
@@ -420,10 +724,41 @@ const ui = { tab: "all", sel: null, q: "", busy: false, thFilter: ls("megadraft-
 let toastT;
 function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2800) }
 const app = document.getElementById("app");
+// Re-renders patch the page in place instead of rebuilding it, so icons and animations don't flash
+// when a tile is tapped or a pick lands. Every view still assigns app.innerHTML as before.
+const HANDLERS = ["onclick", "onchange", "oninput", "onsubmit"];
+function morphAttrs(a, b) {
+  for (const { name } of [...a.attributes]) if (!b.hasAttribute(name)) a.removeAttribute(name);
+  for (const { name, value } of [...b.attributes]) if (a.getAttribute(name) !== value) a.setAttribute(name, value);
+}
+function morph(a, b) {
+  const an = [...a.childNodes], bn = [...b.childNodes];
+  bn.forEach((y, i) => {
+    const x = an[i];
+    if (!x) return a.appendChild(y);
+    if (x.nodeType !== y.nodeType || x.nodeName !== y.nodeName || (x.nodeType === 1 && (x.id || y.id) && x.id !== y.id)) return a.replaceChild(y, x);
+    if (x.nodeType !== 1) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; return }
+    morphAttrs(x, y);
+    HANDLERS.forEach(h => { if (x[h]) x[h] = null });
+    if (x.tagName === "SELECT") { const v = [...y.options].find(o => o.selected)?.value; morph(x, y); if (v != null && document.activeElement !== x) x.value = v; return }
+    if (x.tagName === "INPUT" || x.tagName === "TEXTAREA") {
+      if (document.activeElement !== x && x.value !== y.value) x.value = y.value;
+      if (x.checked !== y.checked) x.checked = y.checked;
+      if (x.tagName === "TEXTAREA") return;
+    }
+    morph(x, y);
+  });
+  for (let i = an.length - 1; i >= bn.length; i--) an[i].remove();
+}
+function patchHTML(el, html) { const t = document.createElement("template"); t.innerHTML = html; morph(el, t.content) }
+{
+  const d = Object.getOwnPropertyDescriptor(Element.prototype, "innerHTML");
+  for (const el of [app, document.getElementById("lockbar")]) Object.defineProperty(el, "innerHTML", { get() { return d.get.call(this) }, set(v) { patchHTML(this, v) }, configurable: true });
+}
 function route() {
   const h = location.hash.slice(1);
   if (h.startsWith("r-")) return { v: "room", id: h.slice(2) };
-  if (h === "create" || h === "join" || h === "builder") return { v: h };
+  if (h === "create" || h === "join" || h === "admin") return { v: h };
   if (h.startsWith("army-")) { const m = h.slice(5); return { v: "army", id: m.slice(0, -2), seat: m.slice(-1) } }
   return { v: "home" };
 }
@@ -443,7 +778,8 @@ function draw() {
   mode.className = "mode" + (Store.live ? " live" : "");
   document.getElementById("lockbar").hidden = true; document.body.classList.remove("hasdock"); document.title = "Megadraft Board";
   const r = route();
-  if (r.v === "builder") return renderBuilder(null);
+  document.body.classList.toggle("home", r.v === "home");
+  if (r.v === "admin") return renderAdmin();
   if (r.v === "army") return renderBuilder(r);
   if (r.v === "room") return renderRoom(r.id);
   if (r.v === "create") return renderCreate();
@@ -451,7 +787,7 @@ function draw() {
   renderHome();
 }
 app.addEventListener("focusout", () => setTimeout(() => { if (pendingRender) render() }, 0));
-window.addEventListener("hashchange", () => { ui.sel = null; ui.btab = "army"; ui.hslot = -1; ui.hpick = false; ui.tab = "all"; ui.q = ""; render(true); window.scrollTo(0, 0) });
+window.addEventListener("hashchange", () => { ui.cr = null; ui.sel = null; ui.btab = "army"; ui.hslot = -1; ui.hpick = false; ui.tab = "all"; ui.q = ""; render(true); window.scrollTo(0, 0) });
 const phaseLabel = p => ({ lobby: "Waiting", draft: "Drafting", attack: "Attacks", done: "Finished" }[p] || p);
 const roomsList = () => Object.entries(Store.rooms).filter(([, r]) => now() - (r.createdAt || 0) < ROOM_MAX_AGE || mySeats(r).length).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
 function roomRow([id, r], cta) {
@@ -467,71 +803,264 @@ function roomRow([id, r], cta) {
 }
 
 /* ---------- home ---------- */
-function renderHome() {
-  const all = roomsList();
-  const mine = all.filter(([, r]) => Store.live && (r.hostUid === Store.uid || mySeats(r).length));
-  const openCount = all.filter(([, r]) => r.phase === "lobby" && !r.players.B).length;
-  app.innerHTML = `
-    <div class="hero">
-      <a class="bigbtn go" href="#create"><b>Create room</b><span class="muted">Set the Town Hall and pick limits, then wait for an opponent.</span></a>
-      <a class="bigbtn" href="#join"><b>Join room</b><span class="muted">${openCount} room${openCount === 1 ? "" : "s"} waiting for an opponent.</span></a>
-    </div>
-    <p style="margin:-6px 0 16px"><a href="#builder">Army builder</a> <span class="muted small">· build any army and get an in-game link to copy it</span></p>
-    ${mine.length ? `<h3>Your rooms</h3><div class="list" style="margin-bottom:16px">${mine.map(e => roomRow(e)).join("")}</div>` : ""}
-    <h3>All rooms</h3>
-    <div class="list">${all.length ? all.slice(0, 30).map(e => roomRow(e)).join("") : `<div class="note">No rooms yet. Create the first one.</div>`}</div>
-    <p class="note" style="margin-top:16px">${Store.backend === "firebase" ? "Rooms are stored on the server and update live for everyone. Send friends this page's link to play. Rooms older than a day drop off the list." : Store.backend === "claude" ? "Rooms update live for everyone on this page. To pick in a draft you must be signed in to Claude with edit access to this page; anyone else can watch." : "No room server is set up, so rooms stay on this device and one screen plays both seats."}</p>`;
+// The home leads with one draft: a live one (yours first), else the last finished one, else an empty board.
+const roomActivity = r => Math.max(r.turnStart || 0, r.createdAt || 0, ...(r.picks || []).map(p => p.at || 0));
+function featured(all) {
+  const sel = ui.hsel && all.find(([id]) => id === ui.hsel);
+  if (sel) { const r = sel[1]; return { kind: r.phase === "draft" ? "live" : r.phase === "lobby" ? "lobby" : "last", e: sel, picked: true } }
+  const byAct = list => list.slice().sort((a, b) => roomActivity(b[1]) - roomActivity(a[1]))[0];
+  const live = all.filter(([, r]) => r.phase === "draft");
+  if (live.length) { const mine = live.filter(([, r]) => Store.live && mySeats(r).length); return { kind: "live", e: byAct(mine.length ? mine : live) } }
+  const ended = all.filter(([, r]) => (r.phase === "attack" || r.phase === "done") && r.picks.length);
+  if (ended.length) return { kind: "last", e: byAct(ended) };
+  return { kind: "none", e: ["", null] };
 }
+function stickerSlots(r, seat) {
+  const mine = r.picks.filter(p => p.seat === seat), n = seatSlots(r, seat);
+  const ts = r.phase === "draft" && !inPreview(r) ? turnSeat(r) : null, lastSeat = r.picks.length ? r.picks[r.picks.length - 1].seat : null;
+  let h = "";
+  for (let i = 0; i < Math.max(n, mine.length); i++) {
+    const p = mine[i], it = p && BYID[p.id];
+    h += it ? `<div class="sk ${lastSeat === seat && i === mine.length - 1 ? "last" : ""}" style="--r:${(i * 37 % 5) - 2}deg;--cc:var(--c-${it.c})" title="${esc(it.n)}"><img src="${it.img}" alt="${esc(it.n)}"></div>`
+      : `<div class="sl ${ts === seat && i === mine.length ? "next" : ""}">${i + 1}</div>`;
+  }
+  return h;
+}
+function seatPage(r, s) {
+  const p = r.players[s], c = r.picks.filter(x => x.seat === s).length;
+  const sub = r.phase === "lobby" ? (!p ? "Waiting for someone to join" : p.ready ? "Ready" : "Getting ready") : `${s === r.first ? "First pick" : "Second pick"} · ${c} of ${seatSlots(r, s)}`;
+  return `<div class="ap ${s}"><div class="who"><div class="av">${p ? esc((p.name || "?")[0].toUpperCase()) : "?"}</div><div><div class="nm">${p ? esc(p.name) : "Open seat"}</div><small>${sub}</small></div></div><div class="g8">${stickerSlots(r, s)}</div></div>`;
+}
+const RING = 527.8;
+function clockParts(f) {
+  const r = f.e[1], N = shownPicks(r), ts = turnSeat(r), who = ts && r.players[ts] ? `<span class="${ts}">${esc(r.players[ts].name)}</span> is picking` : "";
+  if (f.kind === "last") {
+    const w = winner(r), wn = w && w !== "tie" ? `<span class="${w}">${esc(r.players[w]?.name)}</span> won` : w === "tie" ? "It's a tie" : r.phase === "attack" ? "Attacks are underway" : "Draft finished";
+    return { big: r.picks.length, sm: false, small: "picks made", frac: 1, line: wn };
+  }
+  if (f.kind === "lobby") return { big: "–", sm: false, small: "Not started", frac: 0, line: roomInfo(r) };
+  if (inPreview(r)) { const left = r.previewUntil - now(); return { big: Math.ceil(left / 1000), sm: false, small: "Board preview", frac: left / PREVIEW_MS, line: "Picks start soon" } }
+  if (r.paused) return { big: "Paused", sm: true, small: `Pick ${r.picks.length + 1} / ${N}`, frac: 1, line: who };
+  const d = deadline(r);
+  if (!d) return { big: `Pick ${r.picks.length + 1}`, sm: true, small: "No timer", frac: 1, line: who };
+  const left = Math.max(0, d - now());
+  return { big: Math.ceil(left / 1000), sm: false, small: `Pick ${r.picks.length + 1} / ${N}`, frac: left / (r.settings.timer * 1000), line: who };
+}
+function emptyHero() {
+  const page = s => `<div class="ap ${s} quiet"><div class="who"><div class="av">?</div><div><div class="nm">Open seat</div><small>No draft running</small></div></div><div class="g8">${Array.from({ length: perPlayer(DEFAULT_SETTINGS) }, (_, i) => `<div class="sl">${i + 1}</div>`).join("")}</div></div>`;
+  return `<div class="fh"><span class="tag ex">Quiet</span><h2>No drafts right now</h2><span class="sub">Live drafts show up here as they happen.</span></div>
+  <div class="face">${page("A")}<div class="cl"><div class="hclock"><svg viewBox="0 0 180 180" aria-hidden="true"><circle cx="90" cy="90" r="84" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="8"/></svg>
+    <div class="disc"><div><b>–</b><small>No draft</small></div></div></div><div class="picking">Waiting for players</div></div>${page("B")}</div>`;
+}
+function heroHTML(f) {
+  if (f.kind === "none") return emptyHero();
+  const [id, r] = f.e, c = clockParts(f);
+  const tag = { live: `<span class="tag">Live</span>`, last: `<span class="tag last">${f.picked ? (r.phase === "attack" ? "Attacks" : "Finished") : "Last draft"}</span>`, lobby: `<span class="tag ex">${r.players.B ? "Getting ready" : "Open seat"}</span>` }[f.kind];
+  const sub = `TH${r.th} · ${r.settings.timer ? r.settings.timer + " s a pick" : "no timer"}${r.practice ? " · practice" : ""}`;
+  return `<div class="fh">${tag}<h2>${esc(r.name)}</h2><span class="sub">${sub}</span>${id ? (([k, l]) => `<a class="go2 hgo ${k}" href="#r-${id}">${l === "Watch" ? "Watch live" : l === "View" ? "View room" : l === "Open" ? "Open room" : "Join"}</a>`)(roomAction(id, r)) : ""}${f.picked ? `<button type="button" class="go2 hback" data-hclear>Unpin</button>` : ""}</div>
+  <div class="face">${seatPage(r, "A")}
+    <div class="cl"><div class="hclock"><svg viewBox="0 0 180 180" aria-hidden="true"><circle cx="90" cy="90" r="84" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="8"/><circle id="hring" cx="90" cy="90" r="84" fill="none" stroke="${f.kind === "live" ? "#ff6a55" : "#ffc928"}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${RING}" stroke-dashoffset="${RING * (1 - Math.max(0, Math.min(1, c.frac)))}"/></svg>
+      <div class="disc"><div><b id="hbig" class="${c.sm ? "sm" : ""}">${c.big}</b><small id="hsmall">${c.small}</small></div></div></div><div class="picking" id="hline">${c.line}</div></div>
+    ${seatPage(r, "B")}</div>`;
+}
+function roomState(r) {
+  if (r.phase === "lobby") return r.players.B ? ["lobby", "Getting ready"] : ["open", "Open seat"];
+  return { draft: ["draft", "Drafting"], attack: ["attack", "Attacks"], done: ["done", "Finished"] }[r.phase] || ["done", r.phase];
+}
+function roomInfo(r) {
+  const P = s => esc(r.players[s]?.name || "");
+  if (r.phase === "lobby") { if (!r.players.B) return "Waiting for an opponent"; const rd = ["A", "B"].filter(s => r.players[s]?.ready); return rd.length === 1 ? `${P(rd[0])} is ready` : "Marking epics and getting ready" }
+  if (r.phase === "draft") return inPreview(r) ? "Board preview" : r.paused ? "Paused" : `Pick ${r.picks.length + 1} of ${shownPicks(r)}`;
+  if (r.phase === "attack") return r.armyUntil && r.armyUntil > now() ? `Building armies · ${fmt(r.armyUntil - now())}` : "Attacking";
+  const w = winner(r); return w === "tie" ? "Tie" : w ? `${P(w)} won` : "Finished";
+}
+function roomSnake(r) {
+  const N = Math.max(shownPicks(r), r.picks.length), nowAt = r.phase === "draft" && !inPreview(r) ? r.picks.length : -1;
+  let h = ""; for (let i = 0; i < N; i++) { const p = r.picks[i]; h += `<i class="${p ? BYID[p.id]?.c || "" : i === nowAt ? "now" : ""}"></i>` }
+  return `<div class="hsnake" role="img" aria-label="${r.picks.length} of ${shownPicks(r)} picks made">${h}</div>`;
+}
+// What the visitor can do with a room: open their own, take an open seat, or watch it live.
+function roomAction(id, r) {
+  if (!Store.live || mySeats(r).length > 0 || r.hostUid === Store.uid) return ["", "Open"];
+  if (r.phase === "lobby" && !r.players.B) return ["join", "Join"];
+  return ["watch", r.phase === "draft" || r.phase === "lobby" ? "Watch" : "View"];
+}
+function homeRow([id, r]) {
+  const mine = !Store.live || mySeats(r).length > 0 || r.hostUid === Store.uid;
+  const [st, lbl] = roomState(r);
+  const A = r.players.A?.name || "?", B = r.players.B?.name;
+  const [ak, al] = roomAction(id, r), act = `<a class="hbtn ${ak}" href="#r-${id}">${al}</a>`;
+  const del = Store.isAdmin ? `<button type="button" class="hbtn hdel" data-hdel="${id}">Delete</button>` : "";
+  return `<tr class="${mine ? "mine" : ""} ${ui.hsel === id ? "sel" : ""}" data-hsel="${id}"><td style="width:70px"><div class="hduo"><i>${esc(A[0].toUpperCase())}</i><i class="${B ? "" : "empty"}">${B ? esc(B[0].toUpperCase()) : "?"}</i></div></td>
+    <td class="nm"><button type="button" class="hpick" data-hsel="${id}" aria-label="Show ${esc(r.name)} at the top">${esc(r.name)}</button><small><span class="hst ${st}">${lbl}</span>${r.practice ? `<span class="hst prac">Practice</span>` : ""}${esc(A)}${B ? " vs " + esc(B) : ""} · TH${r.th}</small></td>
+    <td class="sn">${roomSnake(r)}<small>${roomInfo(r)}</small></td>
+    <td class="hact">${act}${del}</td></tr>`;
+}
+function renderHome() {
+  const all = roomsList(), f = featured(all);
+  ui.hfeat = f.kind + ":" + (f.e[0] || "");
+  if (ui.hsel && !f.picked) ui.hsel = null;
+  const hf = ui.hf || "all";
+  const isOpen = ([, r]) => r.phase === "lobby" && !r.players.B, isLive = ([, r]) => r.phase === "draft" || r.phase === "attack";
+  const mineFirst = all.slice().sort((a, b) => (Store.live ? (mySeats(b[1]).length > 0) - (mySeats(a[1]).length > 0) : 0));
+  const shown = mineFirst.filter(e => e[0] !== ui.hsel).filter(e => hf === "open" ? isOpen(e) : hf === "live" ? isLive(e) : true).slice(0, 30);
+  const nOpen = all.filter(isOpen).length, nLive = all.filter(isLive).length;
+  const leg = [["troop", "Troop"], ["super", "Super troop"], ["spell", "Spell"], ["siege", "Siege"], ["epic", "Epic equipment"]].map(([c, l]) => `<span><i style="background:var(--c-${c})"></i>${l}</span>`).join("") + `<span><i style="background:var(--hdark)"></i>On the clock</span>`;
+  const empty = !all.length ? `<div class="hempty"><b>No rooms yet</b>Create the first one, or warm up with a practice draft against the bot.</div>`
+    : !shown.length && ui.hsel ? `<div class="hempty"><b>Pinned above</b>The only room in this list is pinned at the top. Unpin it to put it back.</div>`
+    : !shown.length ? `<div class="hempty"><b>Nothing here right now</b>${hf === "open" ? "No one is waiting for an opponent." : "No drafts or attacks are running."}</div>` : "";
+  app.innerHTML = `<div class="h-stage">
+    <section id="hfeat" aria-label="Featured draft">${heroHTML(f)}</section>
+    <div class="acts">
+      <a class="ac main" href="#create"><img src="icons/fireball.webp" alt=""><div><strong>Create room</strong><span>TH18 · 20 s a pick · 7 / 4 / 1 / 4</span></div></a>
+      <a class="ac" href="#join"><img src="icons/hog_rider.webp" alt=""><div><strong>Join</strong><span>${nOpen} room${nOpen === 1 ? "" : "s"} waiting for an opponent</span></div></a>
+      <a class="ac" href="#create" data-practice><img src="icons/battle_drill.webp" alt=""><div><strong>Practice</strong><span>Draft against the bot</span></div></a>
+    </div>
+    <section class="hrooms" aria-labelledby="hrt">
+      <div class="rh"><h2 id="hrt">All rooms</h2><span>${Store.live ? "Updated live · anyone can watch" : "On this device only"}</span>
+        <div class="hf">${[["all", `All ${all.length}`], ["open", `Open seats ${nOpen}`], ["live", `Live ${nLive}`]].map(([k, l]) => `<button type="button" data-hf="${k}" class="${hf === k ? "on" : ""}">${l}</button>`).join("")}</div></div>
+      ${empty || `<div class="hscroll"><table class="htable"><tbody>${shown.map(homeRow).join("")}</tbody></table></div>`}
+      <div class="hleg">${leg}</div>
+    </section>
+    <p class="hnote">${Store.backend === "firebase" ? "Rooms are stored on the server and update live for everyone. Send friends this page's link to play. Rooms older than a day drop off the list." : Store.backend === "claude" ? "Rooms update live for everyone on this page. To pick in a draft you must be signed in to Claude with edit access to this page; anyone else can watch." : "No room server is set up, so rooms stay on this device and one screen plays both seats."}</p>
+  </div>`;
+  app.querySelectorAll("[data-hf]").forEach(b => b.onclick = () => { ui.hf = b.dataset.hf; render(true) });
+  // tap a room to show its board at the top
+  app.querySelectorAll("tr[data-hsel]").forEach(tr => tr.onclick = e => {
+    if (e.target.closest("a, .hdel")) return;
+    ui.hsel = tr.dataset.hsel; render(true);
+    document.getElementById("hfeat").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  });
+  const hc = app.querySelector("[data-hclear]"); if (hc) hc.onclick = () => { ui.hsel = null; render(true) };
+  app.querySelectorAll("[data-hdel]").forEach(b => b.onclick = () => confirmInline(b, "Delete?", async () => { try { await Store.remove(b.dataset.hdel); toast("Room deleted") } catch (e) { toast("Couldn't delete: " + (e.code || e.message)) } }));
+  const pr = app.querySelector("[data-practice]"); if (pr) pr.onclick = () => { ui.practice = true };
+}
+// home: tick the featured clock
+setInterval(() => {
+  if (route().v !== "home" || !document.getElementById("hfeat")) return;
+  const all = roomsList(), f = featured(all);
+  if (ui.hfeat !== f.kind + ":" + (f.e[0] || "")) return render();
+  if (f.kind === "none") return;
+  const c = clockParts(f), big = document.getElementById("hbig");
+  if (!big) return;
+  big.textContent = c.big; big.className = c.sm ? "sm" : "";
+  document.getElementById("hsmall").textContent = c.small;
+  document.getElementById("hline").innerHTML = c.line;
+  document.getElementById("hring").setAttribute("stroke-dashoffset", RING * (1 - Math.max(0, Math.min(1, c.frac))));
+}, 250);
 
 /* ---------- create ---------- */
 function renderCreate() {
-  const n = (k, label, v, min, max, w = 110) => `<label class="f" style="width:${w}px">${label}<input id="${k}" type="number" min="${min}" max="${max}" value="${v}"></label>`;
-  app.innerHTML = `
-    <div class="row" style="margin-bottom:8px"><a href="#" class="small muted">← Back</a></div>
-    <form id="cf" class="panel stack" style="max-width:760px">
-      <h2>Create room</h2>
-      <div class="grid2">
-        <label class="f">Your in-game name<input id="c-me" required maxlength="24" value="${esc(ls("megadraft-name") || "")}"></label>
-        <label class="f">Room name<input id="c-name" maxlength="40" placeholder="Optional"></label>
-      </div>
-      <label class="f" style="width:140px">Town Hall<select id="c-th">${TH_LEVELS.map(t => `<option ${t === 18 ? "selected" : ""}>${t}</option>`).join("")}</select></label>
-      <div><h3>Picks per player</h3><div class="row">
-        ${n("s-troops", "Troops", DEFAULT_SETTINGS.troops, 1, 12)}${n("s-supers", "of which super", DEFAULT_SETTINGS.supers, 0, 2)}
-        ${n("s-spells", "Spells", DEFAULT_SETTINGS.spells, 0, 8)}${n("s-sieges", "Siege", DEFAULT_SETTINGS.sieges, 0, 2)}
-        ${n("s-epics", "Epic equipment", DEFAULT_SETTINGS.epics, 0, 8)}${n("s-timer", "Seconds per pick", DEFAULT_SETTINGS.timer, 0, 600, 140)}
-      </div><p class="small muted" style="margin:6px 0 0" id="poolhint"></p></div>
-      <label class="row small"><input type="checkbox" id="c-bot"> Practice against a bot (it takes the opponent seat and picks on its own)</label>
-      <div id="cerr" class="err" hidden></div>
-      <div class="row"><button class="primary" type="submit">Create room</button></div>
-    </form>`;
-  const read = () => {
-    const g = id => Math.max(0, parseInt(document.getElementById(id).value || "0", 10));
-    const th = +document.getElementById("c-th").value;
-    const settings = { troops: g("s-troops"), supers: Math.min(2, g("s-supers")), spells: g("s-spells"), sieges: g("s-sieges"), epics: g("s-epics"), timer: g("s-timer") };
-    return { th, settings, size: autoSize(th, settings) };
+  // The form lives in ui.cr so live re-renders (a room changing elsewhere) never reset what the host typed.
+  if (!ui.cr) { ui.cr = { me: ls("megadraft-name") || "", name: "", th: 18, ...DEFAULT_SETTINGS, bot: !!ui.practice }; ui.practice = false }
+  const c = ui.cr, settings = { troops: c.troops, supers: Math.min(2, c.supers, c.troops), spells: c.spells, sieges: c.sieges, epics: c.epics, timer: c.timer };
+  const size = autoSize(c.th, settings), prob = poolProblem(c.th, size, settings);
+  const LIM = { troops: [1, 12, 1], supers: [0, Math.min(2, c.troops), 1], spells: [0, 8, 1], sieges: [0, 2, 1], epics: [0, 8, 1], timer: [0, 120, 5] };
+  const step = (k, label, icon, cat, sub) => {
+    const [lo, hi] = LIM[k], v = k === "supers" ? settings.supers : c[k];
+    return `<div class="cr-step" style="--cc:var(--c-${cat})"><img src="icons/${icon}.webp" alt=""><div class="cr-lab"><b>${label}</b><small>${sub}</small></div>
+      <div class="cr-ctl"><button type="button" data-st="${k}" data-d="-1" ${v <= lo ? "disabled" : ""} aria-label="Fewer ${label.toLowerCase()}">−</button><output aria-live="polite">${k === "timer" ? (v ? v + " s" : "Off") : v}</output><button type="button" data-st="${k}" data-d="1" ${v >= hi ? "disabled" : ""} aria-label="More ${label.toLowerCase()}">+</button></div></div>`;
   };
-  const hint = () => {
-    const { th, settings, size } = read();
-    document.getElementById("poolhint").textContent = `The pool will have ${size.troop} troops, ${size.super} super troops, ${size.spell} spells, ${size.siege} siege machines and up to ${size.epic} epic equipment (only epics both players own). Each hero can take at most 2 epics. Heroes, pets and common equipment are free. 0 seconds means no timer.`;
-    const p = poolProblem(th, size, settings), e = document.getElementById("cerr"); e.textContent = p; e.hidden = !p;
-  };
-  app.querySelector("#cf").addEventListener("input", hint);
-  hint();
+  const slots = (n, cat) => Array.from({ length: n }, () => `<i class="${cat}"></i>`).join("");
+  const per = settings.troops + settings.spells + settings.sieges + settings.epics;
+  const mins = c.timer ? Math.ceil(2 * per * c.timer / 60) : 0;
+  app.innerHTML = `<div class="cr">
+    <div class="row cr-top"><a href="#" class="small muted">← Back</a></div>
+    <form id="cf" class="cr-grid" novalidate>
+      <section class="panel cr-main">
+        <div class="cr-head">${c.bot ? `<span class="tag ex">Practice</span>` : ""}<h2>${c.bot ? "Practice draft" : "Create room"}</h2></div>
+        <p class="muted cr-lead">${c.bot ? "The bot takes the other seat and picks on its own. Same rules as a real draft." : "Set the rules, then send the room to your opponent. The pool is dealt once you're both ready."}</p>
+        <div class="cr-names">
+          <label class="f">Your in-game name<input id="c-me" required maxlength="24" value="${esc(c.me)}" autocomplete="nickname"></label>
+          <label class="f">Room name<input id="c-name" maxlength="40" placeholder="${esc((c.me || "My") + "'s room")}" value="${esc(c.name)}"></label>
+        </div>
+        <div class="cr-sec"><h3>Town Hall</h3><div class="cr-th" role="radiogroup" aria-label="Town Hall">${TH_LEVELS.map(t => `<button type="button" role="radio" aria-checked="${t === c.th}" data-th="${t}" class="${t === c.th ? "on" : ""}">${t}</button>`).join("")}</div></div>
+        <div class="cr-sec"><h3>Picks per player</h3><div class="cr-steps">
+          ${step("troops", "Troops", "barbarian", "troop", "Regular and super")}
+          ${step("supers", "Super troops", "super_barbarian", "super", "Most a player can take")}
+          ${step("spells", "Spells", "rage_spell", "spell", "Any spell factory")}
+          ${step("sieges", "Siege machines", "wall_wrecker", "siege", "Goes in the Clan Castle")}
+          ${step("epics", "Epic equipment", "giant_gauntlet", "epic", "Max 2 per hero")}
+          <div class="cr-step cr-timer" style="--cc:var(--hacc)"><span class="cr-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 9v4l2.5 2M9.5 3h5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span><div class="cr-lab"><b>Pick timer</b><small>Auto-pick at 0</small></div>
+            <div class="cr-ctl"><button type="button" data-st="timer" data-d="-1" ${c.timer <= 0 ? "disabled" : ""} aria-label="Less time">−</button><output aria-live="polite">${c.timer ? c.timer + " s" : "Off"}</output><button type="button" data-st="timer" data-d="1" ${c.timer >= 120 ? "disabled" : ""} aria-label="More time">+</button></div></div>
+        </div></div>
+      </section>
+      <aside class="cr-side">
+        <div class="panel cr-sum">
+          <h3>Each player's album</h3>
+          <div class="cr-slots" aria-hidden="true">${slots(settings.troops - settings.supers, "troop")}${slots(settings.supers, "super")}${slots(settings.spells, "spell")}${slots(settings.sieges, "siege")}${slots(settings.epics, "epic")}</div>
+          <p class="cr-big"><b>${per}</b> picks each · ${2 * per} in the draft</p>
+          <p class="small muted">${c.timer ? `Up to about ${mins} min with the timer running out on every pick.` : "No timer: players pick at their own pace."} Up to ${settings.supers} of the ${settings.troops} troops can be super troops.</p>
+          <h3 style="margin-top:14px">The shared pool</h3>
+          <div class="cr-pool">${[["troop", size.troop, "troops"], ["super", size.super, "super troops"], ["spell", size.spell, "spells"], ["siege", size.siege, "siege machines"], ["epic", size.epic, "epics, max"]].map(([k, n, l]) => `<span style="--cc:var(--c-${k})"><b>${n}</b>${l}</span>`).join("")}</div>
+          <p class="small muted">Only epics both players own are dealt. Heroes, pets and common equipment are free.</p>
+          <div id="cerr" class="err" ${prob ? "" : "hidden"}>${esc(prob)}</div>
+          <button class="primary cr-go" type="submit" ${prob ? "disabled" : ""}>${c.bot ? "Start practice" : "Create room"}</button>
+        </div>
+      </aside>
+    </form></div>`;
+  const me = document.getElementById("c-me"), nm = document.getElementById("c-name");
+  me.oninput = () => { c.me = me.value; nm.placeholder = (c.me || "My") + "'s room" };
+  nm.oninput = () => { c.name = nm.value };
+  app.querySelectorAll("[data-th]").forEach(b => b.onclick = () => { c.th = +b.dataset.th; render(true) });
+  app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => {
+    const k = b.dataset.st, [lo, hi, st] = LIM[k], cur = k === "supers" ? settings.supers : c[k];
+    c[k] = Math.max(lo, Math.min(hi, cur + st * +b.dataset.d)); if (k === "troops") c.supers = Math.min(c.supers, c.troops, 2);
+    render(true);
+  });
   document.getElementById("cf").onsubmit = async e => {
     e.preventDefault();
-    const { th, settings, size } = read();
-    const p = poolProblem(th, size, settings); if (p) { toast(p); return }
-    const me = document.getElementById("c-me").value.trim(); ls("megadraft-name", me);
+    if (prob) { toast(prob); return }
+    const name = c.me.trim(); if (!name) { me.focus(); toast("Enter your in-game name."); return }
+    ls("megadraft-name", name);
     if (Store.live && !Store.uid) { toast("Sign in to Claude to create a room."); return }
-    const bot = document.getElementById("c-bot").checked;
+    const bot = c.bot;
     const r = {
-      v: 3, name: document.getElementById("c-name").value.trim() || `${me}'s room`, th, createdAt: now(), hostUid: Store.uid,
+      v: 3, name: c.name.trim() || `${name}'s room`, th: c.th, createdAt: now(), hostUid: Store.uid,
       phase: "lobby", first: null, practice: bot,
-      players: { A: { name: me, uid: Store.uid, lacks: myLacks(), ready: false }, B: bot ? { name: "Bot", uid: "bot", bot: true, lacks: [], ready: true } : null },
+      players: { A: { name, uid: Store.uid, lacks: myLacks(), ready: false }, B: bot ? { name: "Bot", uid: "bot", bot: true, lacks: [], ready: true } : null },
       settings, size, pool: [], picks: [], turnStart: null, paused: false, pausedLeft: null, rerolls: 0, reroll: null, results: { A: null, B: null }
     };
-    try { const id = await Store.create(r); location.hash = "r-" + id } catch (err) { toast("Couldn't create the room. Check your connection and try again.") }
+    try { const id = await Store.create(r); ui.cr = null; location.hash = "r-" + id } catch (err) { toast("Couldn't create the room. Check your connection and try again.") }
   };
+}
+
+/* ---------- admin ---------- */
+// Signs in to a Firebase email/password account. The password is checked by Firebase, never stored in this page;
+// firestore.rules let that account delete any room.
+function renderAdmin() {
+  const head = `<div class="row" style="margin-bottom:8px"><a href="#" class="small muted">← Back</a></div><h2>Admin</h2>`;
+  if (Store.backend !== "firebase") { app.innerHTML = head + `<div class="note">The admin panel needs the room server. On this device you can already watch and delete every room.</div>`; return }
+  if (!Store.isAdmin) {
+    app.innerHTML = head + `<form id="af" class="panel stack" style="max-width:360px">
+      <label class="f">Username<input id="a-user" autocomplete="username" required></label>
+      <label class="f">Password<input id="a-pass" type="password" autocomplete="current-password" required></label>
+      <div class="row"><button class="primary" type="submit">Sign in</button></div><div id="aerr" class="err" hidden></div></form>`;
+    document.getElementById("af").onsubmit = async e => {
+      e.preventDefault();
+      const er = document.getElementById("aerr");
+      try { await Store.adminLogin(document.getElementById("a-user").value, document.getElementById("a-pass").value); render(true) }
+      catch (err) { er.textContent = "Wrong username or password."; er.hidden = false }
+    };
+    return;
+  }
+  const all = Object.entries(Store.rooms).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  const age = r => { const m = Math.round((now() - (r.createdAt || 0)) / 60000); return m < 60 ? m + " min" : m < 1440 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " d" };
+  app.innerHTML = head + `
+    <div class="row" style="margin-bottom:12px"><span class="muted small">Signed in as admin · ${all.length} room${all.length === 1 ? "" : "s"}</span><span class="spacer"></span>
+      ${all.some(([, r]) => now() - (r.createdAt || 0) > ROOM_MAX_AGE) ? `<button type="button" class="danger" id="a-old">Delete rooms older than a day</button>` : ""}<button type="button" id="a-out">Sign out</button></div>
+    <div class="list">${all.length ? all.map(([id, r]) => `<div class="mrow"><span class="th">TH${r.th}</span><strong>${esc(r.name)}</strong>
+      <span class="small"><span class="seatA">${esc(r.players?.A?.name)}</span>${r.players?.B ? ` vs <span class="seatB">${esc(r.players.B.name)}</span>` : ""}</span><span class="spacer"></span>
+      <span class="muted small">${age(r)} ago</span><span class="pill ${r.phase}">${phaseLabel(r.phase)}</span>
+      <a class="btn" href="#r-${id}">Watch</a><button type="button" class="danger" data-adel="${id}">Delete</button></div>`).join("") : `<div class="note">No rooms.</div>`}</div>`;
+  app.querySelectorAll("[data-adel]").forEach(b => b.onclick = () => confirmInline(b, "Sure?", async () => { try { await Store.remove(b.dataset.adel); toast("Room deleted.") } catch (e) { toast("Couldn't delete. Check the Firestore rules.") } }));
+  const old = document.getElementById("a-old");
+  if (old) old.onclick = () => confirmInline(old, "Delete all old rooms?", async () => {
+    const ids = all.filter(([, r]) => now() - (r.createdAt || 0) > ROOM_MAX_AGE).map(([id]) => id);
+    let n = 0; for (const id of ids) { try { await Store.remove(id); n++ } catch (e) { } }
+    toast(`Deleted ${n} of ${ids.length} old rooms.`);
+  });
+  document.getElementById("a-out").onclick = async () => { await Store.adminLogout(); location.hash = "" };
 }
 
 /* ---------- join ---------- */
@@ -557,7 +1086,7 @@ function renderRoom(id) {
   const r = Store.rooms[id];
   if (!r) { app.innerHTML = Store.loaded ? `<div class="note">This room no longer exists. <a href="#join">Find another room</a>.</div>` : `<p class="muted">Loading room…</p>`; return }
   const steps = ["lobby", "draft", "attack", "done"].map(p => `<span class="${r.phase === p ? "on" : ""}">${phaseLabel(p)}</span>`).join("");
-  const canDelete = (isHost(r) && r.phase === "lobby") || isMod();
+  const canDelete = (isHost(r) && r.phase === "lobby") || isMod() || Store.isAdmin;
   let body = r.phase === "lobby" ? lobbyView(id, r) : r.phase === "draft" ? draftView(id, r) : attackView(id, r);
   app.innerHTML = `
     <div class="row" style="margin-bottom:8px"><a href="#" class="small muted">← All rooms</a><span class="spacer"></span>
@@ -584,7 +1113,7 @@ function poolGrid(r, seat, interactive) {
     const t = takenBy[it.id], why = t || !seat ? "" : whyIllegal(r, seat, it);
     const cls = ["tile", t ? "taken" + t : "", why ? "blocked" : "", ui.sel === it.id ? "sel" : ""].join(" ");
     const title = t ? `Taken by ${r.players[t].name}` : why || it.n;
-    return `<button type="button" class="${cls}" data-pick="${it.id}" title="${esc(title)}" ${interactive ? "" : "tabindex=\"-1\""}>
+    return `<button type="button" class="${cls}" style="--cc:var(--c-${it.c})" data-pick="${it.id}" title="${esc(title)}" ${interactive ? "" : "tabindex=\"-1\""}>
       ${it.c === "epic" ? `<img class="herotag" src="${HEROES[it.h].img}" alt="${esc(HEROES[it.h].n)}">` : ""}${t ? `<span class="own seat${t}">${t}</span>` : ""}
       ${img(it)}<span>${esc(it.n)}</span>${it.hs ? `<span class="hs">${it.hs} space</span>` : it.c === "epic" ? `<span class="hs">${esc(HEROES[it.h].n)}</span>` : ""}</button>`;
   };
@@ -613,11 +1142,14 @@ function rulesHTML(r) {
     <li><b>Each player drafts</b> ${st.troops} troops (at most ${st.supers} super), ${st.spells} spells, ${st.sieges} siege machine${st.sieges === 1 ? "" : "s"} and ${st.epics} epic equipment (at most ${EPICS_PER_HERO} per hero).</li>
     <li><b>You attack only with what you drafted.</b> Every troop, super troop, spell and siege machine in your army must be one of your picks. <b>This includes your Clan Castle:</b> no troop, spell or siege machine that you didn't draft, from anyone. A spell you didn't draft can't be used at all. You can bring any number of each drafted troop or spell that fits your camps.</li>
     <li><b>Free for everyone:</b> all heroes (bring up to 4), all pets and all common equipment. Epic equipment must be drafted.</li>
-    <li><b>You don't have to use what you draft.</b> Drafting an epic (or any item) just to keep it from your opponent is allowed. That's part of the strategy.</li>
+    <li><b>Use any of your picks, not all of them.</b> You don't have to use every troop, spell, siege machine or epic you drafted, but everything you do use must be one of your own picks. Drafting something just to keep it from your opponent is allowed; that's part of the strategy.</li>
+    <li><b>Board preview:</b> when the pool is dealt, both players get ${PREVIEW_MS / 1000} seconds to look at it before the first pick.</li>
     <li><b>Epic equipment:</b> the pool only deals epics that both players own (up to ${r.size?.epic ?? 10}; if fewer qualify, all of them).</li>
     <li><b>New pool:</b> during the draft either player can ask for a new pool. It changes only if the other player accepts, at most ${MAX_REROLLS} times per room, and the draft restarts from the first pick.</li>
     <li><b>Timer:</b> ${st.timer ? `${st.timer} seconds per pick. If it runs out, a random legal item is picked for you and marked with *.` : "none in this room."}</li>
+    <li><b>Epic race:</b> both players can take up to ${st.epics} epics. If the pool runs out of epics you can still take, each of your empty epic slots becomes a <b>flex pick</b>: one more troop or spell, over the usual limit. The super troop, siege and 2-per-hero limits don't change, so both players always make the same number of picks.</li>
     <li><b>Finish early:</b> once you have at least ${m.troops} troops, ${m.spells} spells, ${m.sieges} siege and ${m.epics} epic equipment, you can press Finish drafting. Your remaining turns are skipped and you can't pick again.</li>
+    <li><b>Army building:</b> after the draft you have ${ARMY_MS / 60000} minutes to build your army on the site. Then the builder locks, and you copy the link into the game.</li>
     <li><b>Attacks:</b> each player attacks the other's own base in a friendly challenge, both within 15 minutes. Stars win, then destruction %, then time left.</li>
   </ol>`;
 }
@@ -686,14 +1218,16 @@ function bindLobby(id, r) {
 function rosterHTML(r, seat) {
   const st = r.settings, last = r.picks[r.picks.length - 1];
   const mine = r.picks.filter(p => p.seat === seat).map(p => ({ ...BYID[p.id], auto: p.auto }));
-  const chip = it => `<span class="chip ${last && last.id === it.id ? "last" : ""}" title="${it.auto ? "Auto-picked when the timer ran out" : ""}">${img(it, "")}${esc(it.n)}${it.auto ? " *" : ""}${it.c === "epic" ? ` <span class="muted">${it.h}</span>` : ""}</span>`;
+  const chip = it => `<span class="chip ${last && last.id === it.id ? "last" : ""}" style="--cc:var(--c-${it.c})" title="${it.auto ? "Auto-picked when the timer ran out" : ""}">${img(it, "")}${esc(it.n)}${it.auto ? " *" : ""}${it.c === "epic" ? ` <span class="muted">${it.h}</span>` : ""}</span>`;
   const empties = n => Array.from({ length: Math.max(0, n) }, () => `<span class="chip empty">open</span>`).join("");
+  const c0 = counts(r, seat), fx = { on: r.phase === "draft" && !!r.pool?.length && !epicsOpenFor(r, seat, c0) && c0.epic < st.epics, left: flexLeft(r, seat, c0) };
+  const flexes = n => Array.from({ length: n }, () => `<span class="chip empty flex" title="No epics left for you: take one more troop or spell instead">flex</span>`).join("");
   const troops = mine.filter(i => i.c === "troop" || i.c === "super"), supers = troops.filter(i => i.c === "super").length;
   return [["Troops", troops, st.troops, `${supers}/${st.supers} super`], ["Spells", mine.filter(i => i.c === "spell"), st.spells], ["Siege", mine.filter(i => i.c === "siege"), st.sieges], ["Epic equip.", mine.filter(i => i.c === "epic"), st.epics]]
-    .filter(g => g[2] > 0).map(([lab, arr, cap, extra]) => `<div class="cat"><div class="lab">${lab}<br><span class="mono">${arr.length}/${cap}</span>${extra ? `<br>${extra}` : ""}</div><div class="slots">${arr.map(chip).join("")}${empties(cap - arr.length)}</div></div>`).join("");
+    .filter(g => g[2] > 0).map(([lab, arr, cap, extra]) => `<div class="cat"><div class="lab">${lab}<br><span class="mono">${arr.length}/${cap}</span>${extra ? `<br>${extra}` : ""}</div><div class="slots">${arr.map(chip).join("")}${r.phase !== "draft" || r.done?.[seat] ? "" : lab.startsWith("Epic") && fx.on ? flexes(fx.left) : empties(Math.max(0, cap - arr.length))}</div></div>`).join("");
 }
 function draftView(id, r) {
-  const i = r.picks.length, N = r.picks.length + ["A", "B"].reduce((a, s) => a + (seatFull(r, s) ? 0 : perPlayer(r.settings) - picksOf(r, s).length), 0), seat = turnSeat(r), next = nextSeat(r);
+  const i = r.picks.length, N = shownPicks(r), seat = turnSeat(r), next = nextSeat(r);
   const me = mySeats(r), mod = isMod();
   const log = r.picks.map((p, k) => `<div><span class="mono muted">${String(k + 1).padStart(2, "0")}</span> <b class="seat${p.seat}">${esc(r.players[p.seat].name)}</b> took ${esc(BYID[p.id]?.n)}${p.auto ? " <span class='muted'>(auto, timer ran out)</span>" : ""}</div>`).reverse().join("");
   const youTxt = me.includes(seat) ? (Store.live ? "Your pick" : "") : me.length ? "Opponent is picking" : "You're watching";
@@ -710,7 +1244,7 @@ function draftView(id, r) {
   return `${rr}
     <div class="status turn${seat}">
       <div><div class="small muted">Pick ${i + 1} of ${N}${youTxt ? " · " + youTxt : ""}</div><div class="who seat${seat}">${esc(r.players[seat].name)} to pick</div></div>
-      <div class="clock js-clock" id="clock">${r.settings.timer ? fmt(r.paused ? (r.pausedLeft ?? r.settings.timer * 1000) : Math.max(0, deadline(r) - now())) : "No timer"}</div>
+      <div class="clock js-clock" id="clock">${clockText(r)}</div>
       <div class="small muted">${next ? `Then: <span class="seat${next}">${esc(r.players[next].name)}</span>` : "Last pick"}</div>
       <span class="spacer"></span>
       ${mod ? `<button type="button" id="pause">${r.paused ? "Resume timer" : "Pause timer"}</button><button type="button" id="undo" ${i ? "" : "disabled"}>Undo last pick</button>` : ""}
@@ -728,11 +1262,17 @@ function bindDraft(id, r) {
   app.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => {
     const it = BYID[b.dataset.pick];
     if (!canActFor(r, seat)) { toast(mySeats(r).length ? `Wait for ${r.players[seat].name} to pick.` : "You're watching this room."); return }
+    if (inPreview(r)) { toast(`Look first: picks start in ${Math.ceil((r.previewUntil - now()) / 1000)} s.`); return }
     const why = whyIllegal(r, seat, it); if (why) { toast(why); return }
     ui.sel = ui.sel === it.id ? null : it.id; render(true);
   });
-  const resume = x => { x.paused = false; x.turnStart = now() - (x.settings.timer * 1000 - (x.pausedLeft ?? x.settings.timer * 1000)); x.pausedLeft = null; x.reroll = null; return x };
-  const newPool = x => { x.pool = genPool(x.th, x.size, x.players); Object.assign(x, { picks: [], turn: 0, done: {}, rerolls: (x.rerolls || 0) + 1, reroll: null, paused: false, pausedLeft: null, turnStart: now() }); ui.sel = null; return x };
+  const resume = x => {
+    const left = x.pausedLeft ?? x.settings.timer * 1000;
+    x.paused = false; x.turnStart = now() - (x.settings.timer * 1000 - left); x.pausedLeft = null; x.reroll = null;
+    if (x.previewUntil && x.turnStart > now()) x.previewUntil = x.turnStart; // still inside the preview
+    return x;
+  };
+  const newPool = x => { const start = now() + PREVIEW_MS; x.pool = genPool(x.th, x.size, x.players); Object.assign(x, { picks: [], turn: 0, done: {}, rerolls: (x.rerolls || 0) + 1, reroll: null, paused: false, pausedLeft: null, previewUntil: start, turnStart: start }); ui.sel = null; return x };
   const ask = document.getElementById("rrAsk");
   if (ask) ask.onclick = () => confirmInline(ask, "Ask for a new pool?", async () => {
     const by = mySeats(r).includes(seat) ? seat : mySeats(r)[0];
@@ -768,14 +1308,15 @@ function bindDraft(id, r) {
   const it = mine && ui.sel && BYID[ui.sel];
   const forWho = Store.live ? "" : ` <span class="seat${seat}">(${esc(r.players[seat].name)})</span>`;
   bar.hidden = false; document.body.classList.add("hasdock"); bar.className = "dock" + (mine ? " mine" : "");
-  bar.innerHTML = `<div class="dclock js-clock">${r.settings.timer ? fmt(r.paused ? (r.pausedLeft ?? r.settings.timer * 1000) : Math.max(0, deadline(r) - now())) : "∞"}</div>
+  const pv = inPreview(r);
+  bar.innerHTML = `<div class="dclock js-clock">${clockText(r)}</div>
     <div style="flex:1;min-width:150px">
-      <div class="dwho">${mine ? `Your turn${forWho}` : `<span class="seat${seat}">${esc(r.players[seat].name)}</span> is picking`}</div>
-      <div class="dsub">${it ? `Selected: <b>${esc(it.n)}</b>` : mine ? "Tap an item in the pool, then lock it in." : mySeats(r).length ? (r.done?.[mySeats(r)[0]] ? "You finished drafting." : "Wait for your turn.") : "You're watching."}${next ? ` · next: <span class="seat${next}">${esc(r.players[next].name)}</span>` : " · last pick"}</div>
+      <div class="dwho">${pv ? `Look at the board · <span class="seat${seat}">${esc(r.players[seat].name)}</span> picks first` : mine ? `Your turn${forWho}` : `<span class="seat${seat}">${esc(r.players[seat].name)}</span> is picking`}</div>
+      <div class="dsub">${pv ? "Nobody can pick until the clock reaches 0." : it ? `Selected: <b>${esc(it.n)}</b>` : mine ? "Tap an item in the pool, then lock it in." : mySeats(r).length ? (r.done?.[mySeats(r)[0]] ? "You finished drafting." : "Wait for your turn.") : "You're watching."}${next ? ` · next: <span class="seat${next}">${esc(r.players[next].name)}</span>` : " · last pick"}</div>
     </div>
-    ${it ? `<button type="button" class="primary" id="lockin">Lock in</button><button type="button" id="cancelSel">Cancel</button>` : ""}
-    ${canFin ? `<button type="button" id="finishDraft" title="Skip your remaining turns">Finish drafting${Store.live ? "" : ` (${esc(r.players[finSeat].name)})`}</button>` : ""}`;
-  document.title = (mine ? "● Your turn · " : "") + "Megadraft Board";
+    ${it ? `<button type="button" class="primary" id="lockin" ${pv ? "disabled" : ""}>${pv ? "Picks start soon" : "Lock in"}</button><button type="button" id="cancelSel">Cancel</button>` : ""}
+    ${canFin && !pv ? `<button type="button" id="finishDraft" title="Skip your remaining turns">Finish drafting${Store.live ? "" : ` (${esc(r.players[finSeat].name)})`}</button>` : ""}`;
+  document.title = (pv ? "Board preview · " : mine ? "● Your turn · " : "") + "Megadraft Board";
   const li = document.getElementById("lockin");
   if (li) li.onclick = async () => {
     if (ui.busy) return; ui.busy = true; li.disabled = true;
@@ -810,6 +1351,7 @@ function attackView(id, r) {
     </div>`;
   };
   return `
+    ${r.armyUntil && r.phase === "attack" ? `<div class="status" style="border-color:var(--accent)"><b>Army building</b><span class="clock js-armyclock">${fmt(Math.max(0, r.armyUntil - now()))}</span><span class="small muted">Build your army on the site before the time runs out. After that the builder locks.</span></div>` : ""}
     <div class="note" style="margin-bottom:12px">Draft complete. Use <b>Build army link</b> to set up your army and copy it straight into the game. Train only your picks; your Clan Castle can hold your own drafted items only. Send each other friendly challenges and start both attacks in the same 15-minute window.</div>
 
     <div class="grid2">${["A", "B"].map(s => `<section class="panel roster ${s}"><div class="head"><span class="name seat${s}">${esc(r.players[s].name)}</span><span class="spacer"></span>${canActFor(r, s) || !Store.live ? `<a class="btn primary" href="#army-${id}-${s}">Build army link</a>` : ""}<button type="button" data-copy="${s}">Copy list</button></div>${rosterHTML(r, s)}</section>`).join("")}</div>
@@ -835,7 +1377,7 @@ function bindAttack(id, r) {
   const rm = document.getElementById("rematch");
   if (rm) rm.onclick = () => confirmInline(rm, "Same players, new pool?", async () => {
     const n = structuredClone(r);
-    Object.assign(n, { name: r.name.replace(/ \(rematch\)$/, "") + " (rematch)", createdAt: now(), phase: "lobby", first: null, turn: 0, done: {}, pool: [], picks: [], turnStart: null, paused: false, pausedLeft: null, rerolls: 0, reroll: null, results: { A: null, B: null } });
+    Object.assign(n, { name: r.name.replace(/ \(rematch\)$/, "") + " (rematch)", createdAt: now(), phase: "lobby", first: null, turn: 0, done: {}, pool: [], picks: [], turnStart: null, previewUntil: null, armyUntil: null, paused: false, pausedLeft: null, rerolls: 0, reroll: null, results: { A: null, B: null } });
     for (const s of ["A", "B"]) if (n.players[s] && !n.players[s].bot) n.players[s].ready = false;
     const nid = await Store.create(n); location.hash = "r-" + nid;
   });
@@ -862,7 +1404,7 @@ function renderBuilder(ctx) {
   let r = null, seat = null, th, troops, spells, sieges, epicIds, key, title, back;
   if (ctx) {
     r = Store.rooms[ctx.id];
-    if (!r) { app.innerHTML = Store.loaded ? `<div class="note">This room no longer exists. <a href="#builder">Open the free army builder</a>.</div>` : `<p class="muted">Loading room…</p>`; return }
+    if (!r) { app.innerHTML = Store.loaded ? `<div class="note">This room no longer exists. <a href="#">Back to rooms</a>.</div>` : `<p class="muted">Loading room…</p>`; return }
     seat = ctx.seat; th = r.th;
     const mine = picksOf(r, seat);
     troops = mine.filter(i => i.c === "troop" || i.c === "super"); spells = mine.filter(i => i.c === "spell"); sieges = mine.filter(i => i.c === "siege");
@@ -891,8 +1433,8 @@ function renderBuilder(ctx) {
   const fits = (b, it) => it.c === "siege" ? room["g" + b] >= 1 : room[b] >= (it.hs || 1);
   const kind = it => it.c === "spell" ? "spell" : it.c === "siege" ? "siege" : "";
   const fixed = it => ctx && it.c === "siege";
-  const unit = (b, it, n, add) => !add && fixed(it) ? `<span class="unit siege fixed" title="${esc(it.n)} · your drafted siege machine, always in the Clan Castle">${img(it, "")}<span class="cnt">x${n}</span></span>`
-    : `<button type="button" class="unit ${kind(it)}" data-${add ? "add" : "rem"}="${b}|${it.id}" ${add && !fits(b, it) ? "disabled" : ""} title="${esc(it.n)}${add ? "" : " · tap to remove one"}">${img(it, "")}${n ? `<span class="cnt">x${n}</span>` : ""}${add && it.c !== "siege" ? `<span class="sp">${it.hs || 1}</span>` : ""}</button>`;
+  const unit = (b, it, n, add) => !add && fixed(it) ? `<span class="unit siege fixed" style="--cc:var(--c-siege)" title="${esc(it.n)} · your drafted siege machine, always in the Clan Castle">${img(it, "")}<span class="cnt">x${n}</span></span>`
+    : `<button type="button" class="unit ${kind(it)}" style="--cc:var(--c-${it.c})" data-${add ? "add" : "rem"}="${b}|${it.id}" ${add && !fits(b, it) ? "disabled" : ""} title="${esc(it.n)}${add ? "" : " · tap to remove one"}">${img(it, "")}${n ? `<span class="cnt">x${n}</span>` : ""}${add && it.c !== "siege" ? `<span class="sp">${it.hs || 1}</span>` : ""}</button>`;
   const tray = (bs) => { const out = bs.flatMap(b => Object.entries(get(b)).filter(([id, n]) => n > 0 && BYID[id]).map(([id, n]) => unit(b, BYID[id], n, false))); return out.length ? out.join("") : `<span class="empty">Tap a unit below to add it.</span>` };
   const capbar = (lab, used, max) => `<div class="capbar ${used >= max ? "full" : ""}"><span style="min-width:92px">${lab}</span><span class="bar"><i style="width:${max ? Math.min(100, 100 * used / max) : 0}%"></i></span><span>${used}/${max}</span></div>`;
   const cc = tab === "cc", tb = cc ? "cu" : "u", sb = cc ? "cs" : "s";
@@ -930,9 +1472,12 @@ function renderBuilder(ctx) {
   const empty = !Object.values(a.u).some(n => n > 0) && !Object.values(a.s).some(n => n > 0);
   const ttl = ctx ? `<span class="th">TH${th}</span><h2 style="margin:0">${title}</h2><span class="muted small">${esc(r.name)}</span>`
     : `<h2 style="margin:0">${title}</h2><label class="f" style="width:120px">Town Hall<select id="b-th">${TH_LEVELS.map(x => `<option ${x === th ? "selected" : ""}>${x}</option>`).join("")}</select></label>`;
-  app.innerHTML = `<div id="builder">
+  const locked = !!(ctx && r.armyUntil && now() >= r.armyUntil);
+  app.innerHTML = `<div id="builder" ${locked ? `data-locked="1"` : ""}>
     <div class="row" style="margin-bottom:8px"><a href="${back}" class="small muted">← Back</a></div>
     <div class="row" style="margin-bottom:12px">${ttl}</div>
+    ${ctx && r.armyUntil ? (locked ? `<div class="status" style="border-color:var(--bad)"><b>Time's up.</b><span class="small muted">The army is locked. Copy the link below into the game.</span></div>`
+      : `<div class="status" style="border-color:var(--accent)"><b>Time to build</b><span class="clock js-armyclock">${fmt(r.armyUntil - now())}</span><span class="small muted">The builder locks when this reaches 0.</span></div>`) : ""}
     <section class="army">
       <div class="tabs"><button type="button" data-btab="army" class="${cc ? "" : "on"}">Army</button><button type="button" data-btab="cc" class="${cc ? "on" : ""}">Clan Castle</button><span class="spacer"></span><button type="button" id="b-clear">Clear ${cc ? "Clan Castle" : "army"}</button></div>
       ${capbar(cc ? "CC troops" : "Troops", usedT, cc ? cap[2] : cap[0])}
@@ -955,6 +1500,7 @@ function renderBuilder(ctx) {
         <span class="small muted">Open the link on the phone that has the game, then tap Okay to copy the army.</span></div>
     </section>
   </div>`;
+  if (locked) { app.querySelectorAll("#builder .army button, #builder .hslots button, #builder .hpanel button").forEach(b => b.disabled = true); ui.hslot = -1 }
   app.querySelectorAll("[data-add]").forEach(b => b.onclick = () => { const [bk, id] = b.dataset.add.split("|"), it = BYID[id]; if (!fits(bk, it)) return; const o = get(bk); o[id] = (o[id] || 0) + 1; save() });
   app.querySelectorAll("[data-rem]").forEach(b => b.onclick = () => { const [bk, id] = b.dataset.rem.split("|"), o = get(bk); o[id] = (o[id] || 0) - 1; if (o[id] <= 0) delete o[id]; save() });
   app.querySelectorAll("[data-btab]").forEach(b => b.onclick = () => { ui.btab = b.dataset.btab; renderBuilder(ctx) });
@@ -987,14 +1533,23 @@ function botChoice(r, legal) {
 /* ---------- timer + auto-pick ---------- */
 const autoTried = {};
 function fmt(ms) { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` }
+// army-building countdown (room page and builder)
+setInterval(() => {
+  const rt = route(); if (rt.v !== "room" && rt.v !== "army") return;
+  const r = Store.rooms[rt.id]; if (!r || !r.armyUntil || r.phase === "draft" || r.phase === "lobby") return;
+  const left = r.armyUntil - now();
+  document.querySelectorAll(".js-armyclock").forEach(c => c.textContent = left > 0 ? fmt(left) : "0:00");
+  if (left <= 0 && rt.v === "army" && document.getElementById("builder") && !document.getElementById("builder").dataset.locked) renderBuilder(rt);
+}, 500);
 setInterval(() => {
   const rt = route(); if (rt.v !== "room") return;
   const r = Store.rooms[rt.id]; if (!r || r.phase !== "draft") return;
-  if (r.settings.timer) document.querySelectorAll(".js-clock").forEach(c => {
-    const big = c.classList.contains("dclock") ? "dclock" : "clock";
-    if (r.paused) { c.textContent = "Paused " + fmt(r.pausedLeft ?? r.settings.timer * 1000); c.className = big + " js-clock" }
-    else { const left = deadline(r) - now(); c.textContent = fmt(Math.max(0, left)); c.className = big + " js-clock" + (left < 6000 ? " low" : "") }
+  document.querySelectorAll(".js-clock").forEach(c => {
+    const big = c.classList.contains("dclock") ? "dclock" : "clock", d = deadline(r);
+    c.textContent = clockText(r); c.className = big + " js-clock" + (!inPreview(r) && d && d - now() < 6000 ? " low" : "");
   });
+  // re-render once when the preview ends so Lock in becomes available
+  if (r.previewUntil && ui.pvDone !== rt.id + r.previewUntil && now() >= r.previewUntil) { ui.pvDone = rt.id + r.previewUntil; render() }
   const i = r.picks.length, k = curSlot(r), seat = turnSeat(r); if (!seat) return;
   // practice bot: the host's device picks for it after a short pause
   if (r.players[seat]?.bot && isHost(r) && !r.paused && r.turnStart && now() - r.turnStart >= 1200) {
@@ -1028,7 +1583,7 @@ setInterval(() => {
 Store.listeners.push(() => {
   const v = route().v;
   // these pages don't depend on live room changes, and a re-render would wipe what you typed
-  if (v === "create" || v === "builder" || (v === "army" && document.getElementById("builder"))) return;
+  if ((v === "admin" && !Store.isAdmin) || v === "create" || v === "builder" || (v === "army" && document.getElementById("builder"))) return;
   render();
 });
 Store.init().then(() => render(true));

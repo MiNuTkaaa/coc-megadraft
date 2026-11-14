@@ -20,7 +20,10 @@ Heroes, pets and common equipment are free for everyone. Attacks are played as f
 - 20-second pick timer by default, with a random auto-pick; a bottom bar shows the clock and whose turn it is
 - Finish drafting early once you have 5 troops, 3 spells, 1 siege and 2 epics
 - Practice mode against a bot
-- In-game style army builder with hard capacity limits, which makes an in-game "copy army" link. There's also a free builder at `#builder`
+- In-game style army builder with hard capacity limits, which makes an in-game "copy army" link. Each player builds from their own drafted picks.
+- 30-second board preview before the first pick; 3-minute army-building timer after the draft
+- Admin panel at `#admin` (Firebase email/password account) to watch and delete any room
+- Home page shows one draft at the top (tap any room to show its board there), with each room's picks as a coloured strip by troop, spell, siege and epic
 - Pick log, results and winner
 
 ## Running it

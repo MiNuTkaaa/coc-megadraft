@@ -1,6 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // The admin account (Firebase email/password user) can delete or fix any room.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "admin@coc-megadraft.app";
+    }
+
     match /rooms/{roomId} {
       // Anyone can see rooms (lobby list and spectating).
       allow read: if true;
@@ -11,7 +16,7 @@ service cloud.firestore {
         && request.resource.data.players.A.uid == request.auth.uid;
 
       // Only the two seated players change a room, plus a newcomer taking the empty seat.
-      allow update: if request.auth != null
+      allow update: if isAdmin() || (request.auth != null
         && request.resource.data.hostUid == resource.data.hostUid
         && (
           request.auth.uid == resource.data.hostUid
@@ -19,10 +24,10 @@ service cloud.firestore {
           || (resource.data.players.B == null
               && request.resource.data.players.B != null
               && request.resource.data.players.B.uid == request.auth.uid)
-        );
+        ));
 
-      // Only the host deletes a room.
-      allow delete: if request.auth != null && request.auth.uid == resource.data.hostUid;
+      // The host or the admin deletes a room.
+      allow delete: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.hostUid);
     }
   }
 }
