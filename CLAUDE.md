@@ -67,7 +67,9 @@ Source: https://github.com/ClashKingInc/ClashKingAssets (`assets/static_data/*.j
 - **Unlock Town Hall**: the production building level that unlocks the item (barracks, dark barracks, workshop, spell factories), mapped to that building level's `required_townhall` in `buildings.json`. Super troops use max(TH11, the base troop's TH). Heroes: BK 7, AQ 8, MP 9, GW 11, RC 13, DD 15.
 - **`aid`**: the in-game id minus its base (troops 4000000, spells 26000000, heroes 28000000, pets 73000000, equipment 90000000). The army link uses it.
 - `hs` is housing space. `fly` marks air troops, so the pool can guarantee some air and some ground.
-- The data has 19 epic equipment across 6 heroes (BK, AQ, GW, RC, MP, DD). The Angry spell is real.
+- The data has 19 epic equipment across 6 heroes (BK, AQ, GW, RC, MP, DD). The Angry spell is real. Heroic Spell (TH17, 2 housing) was added 2026-11-24.
+- Squads (Squad Barracks troops, incl. TH19's Baby Dragon Squad) are skipped by `data.py` and not draftable for now.
+- `build.sh` needs the ClashKingAssets checkout to include the icon folders (`git sparse-checkout set --no-cone assets/static_data assets/troops assets/spells assets/equipment assets/heroes assets/pets`). It re-encodes every icon, so restore unchanged ones with `git checkout -- icons/` before committing.
 
 ## How the app works (`tools/template.html`)
 
@@ -80,6 +82,8 @@ The `Store` object picks a backend at startup:
 3. **localStorage**, when neither is available. Labeled "This device only".
 
 Rendering: `app` and `#lockbar` have an `innerHTML` setter that patches the DOM in place (`morph`), so taps and picks don't rebuild the page and icons don't flash. It clears `onclick`/`onchange`/`oninput`/`onsubmit` on reused elements, so views must bind handlers with those properties after each render (not `addEventListener`).
+
+Time: every device uses `now()` = its clock + `clock.offset`, which `syncClock` reads from the server's HTTP Date header at startup (several samples, ignored under 0.75 s). Phones a few seconds off used to see 13-second timers, get stuck in the preview, or auto-pick the moment their turn came (fixed 2026-11-24). As a second guard, a device only auto-picks after it has watched that turn for the whole timer itself (`seenAt`).
 
 `Store.mutate(id, fn)` takes a pure function that returns the new room, or `null` to abort. All game logic goes through it.
 
@@ -99,16 +103,17 @@ Rendering: `app` and `#lockbar` have an `innerHTML` setter that patches the DOM 
 ### Look and home page (`renderHome`)
 
 - Every page uses the navy sticker-album style (Bowlby One + Rubik), rolled out to the whole site on 2026-11-14. The `--h*` and `--c-*` tokens live on `body`. The older tokens (`--fg`, `--panel`, `--line`, ...) mean "on the navy" at `:root`, and the light cards (`.panel`, `.status`, `.dock`, `.mrow`, `.hpanel`, `.hrooms`, ...) flip them back to dark ink. Pool tiles, roster chips and builder units get a category-coloured underline through `--cc`. The "sticker-album theme for every page" CSS block holds the overrides.
-- The top shows one draft (`featured`): a room the visitor tapped in the list (`ui.hsel`), else a live draft (the visitor's own first, then the most recently active), else the last finished draft, else an empty, dimmed board ("No drafts right now", `emptyHero`). There is no example draft (Mikhail removed it, 2026-11-13).
-- Tapping a room row pins its board at the top without leaving the page, and that room leaves the list until it's unpinned (Unpin button). The pinned board has a button that opens the room (Watch live, View room, Open room or Join).
-- Each row's button comes from `roomAction`: Open (your room), Join (open seat), Watch (someone else's lobby or draft) or View (attacks or finished). Watch opens the room page read-only, updating live. Signed-in admins also get Delete on every row.
+- **My rooms** (`myCard`, 2026-11-24): rooms where this browser is seated or hosts (`isMine`) show as cards at the top. The whole card links into the room, and it is flagged "Your turn" when it is. They never appear in the list or the preview.
+- The preview (`featured`) shows other people's rooms only: a row the visitor tapped (`ui.hsel`), else the most recently active live draft, else the last finished draft, else an empty board (`emptyHero`). Its only control is a Watch button under the clock. There is no example draft.
+- The list ("Other rooms") keeps every room, including the previewed one (highlighted). Tapping a row previews it; tapping it again clears it. Row buttons come from `roomAction`: Join (open seat), Watch (lobby or draft) or View (attacks or finished), plus Delete for a signed-in admin.
+- Direct links: `#r-<id>` opens a room. The room header has "Copy room link", and the host's lobby shows the link with a Copy button (`roomLink`, `copyText`).
 - Each row's strip is the whole snake, one cell per pick, coloured by what was taken: troop yellow, super troop orange-red, spell blue, siege green, epic equipment purple (`--c-*` tokens). The next pick blinks navy.
 - Actions: Create room, Join, Practice (opens Create with the bot ticked via `ui.practice`). The free army builder (`#builder`) was removed from the menu and the route; the per-room builder (`#army-<room>-<seat>`) stays.
 
 ### Flow
 
-1. **Create** (`renderCreate`): name, Town Hall chips (default 18), +/- steppers for picks per player and the timer (default 20 s, 5 s steps, 0 = off), and a live summary card (each player's slots, the pool). The form state lives in `ui.cr`, so live re-renders don't reset it. There is no bot checkbox: the home Practice button sets `ui.practice`, which opens the same screen as "Practice draft" with the bot seated. Pool sizes come from `autoSize`: about 1.5x what both players draft, plus at least 2 spare (1.25x for epics), capped at what exists at that TH. The defaults (7 troops, 2 supers, 4 spells, 1 siege, 4 epics) give 15 / 6 / 12 / 4 / 10.
-2. **Lobby** (`lobbyView`): the opponent joins. Each seated player sees the rules, ticks the epic equipment they don't own (`lacks`, remembered in localStorage) and presses **Ready**. When both are ready, `startDraft` deals the pool, flips a coin for first pick and starts the draft. The pool doesn't exist before this point.
+1. **Create** (`renderCreate`): name, Town Hall chips 12-19 (default 19), +/- steppers for picks per player and the timer (default 20 s, 5 s steps, 0 = off), and a live summary card (each player's slots, the pool). The form state lives in `ui.cr`, so live re-renders don't reset it. There is no bot checkbox: the home Practice button sets `ui.practice`, which opens the same screen as "Practice draft" with the bot seated. Pool sizes come from `autoSize`: about 1.5x what both players draft, plus at least 2 spare (1.25x for epics), capped at what exists at that TH. The defaults (7 troops, 2 supers, 4 spells, 1 siege, 4 epics) give 15 / 6 / 12 / 4 / 10.
+2. **Lobby** (`lobbyView`): the opponent joins. Each seated player sees the rules (`rulesHTML`: a grid of short cards, bold headline plus one line; there is no attack-window rule since 2026-11-24), ticks the epic equipment they don't own (`lacks`, remembered in localStorage) and presses **Ready**. When both are ready, `startDraft` deals the pool, flips a coin for first pick and starts the draft. The pool doesn't exist before this point.
    - **Board preview**: the first 30 s (`PREVIEW_MS`) are for looking only. `previewUntil` is set and `turnStart` equals it, so the pick timer starts after the preview. `applyPick` refuses picks while `inPreview(r)`. A new pool from Change pool gets a fresh preview.
 3. **Draft** (`draftView`/`bindDraft`): only the board. Rules and checkboxes are gone.
    - Snake order (`seqSeat`): F, O, O, F, F, O, O, ... `curSlot` skips seats that are full or finished, and `turnSeat` gives whose turn it is.
@@ -116,7 +121,9 @@ Rendering: `app` and `#lockbar` have an `innerHTML` setter that patches the DOM 
    - **Finish drafting**: available once a player has the minimum (`minsOf`: troops-2, spells-1, epics-2, all sieges, so 5/3/2/1 by default). That player's remaining turns are skipped. `finishStuck` also ends a seat that has nothing legal left.
    - **Change pool**: either player asks, the timer pauses, and the other must Accept or Decline. Accepting deals a new pool and restarts the picks. The limit is `MAX_REROLLS` = 2 per room. In practice or one-screen mode it happens straight away.
    - **Timer**: at 0, the picker's own device auto-picks a random legal item, then the opponent's device after 3 s, then a spectator's after 8 s (`setInterval` tick). The bot is driven by the host's device (`botChoice`).
-   - A bottom dock shows the clock, whose turn it is, Lock in and Finish drafting. The tab title says "Your turn".
+   - A bottom dock shows the clock, whose turn it is, Lock in, Finish drafting and a sound toggle. The tab title says "Your turn".
+   - **Your turn** (`announceTurn`): when the turn comes back to you (live rooms and practice), a big banner pops up, the screen edge glows yellow (`body.myturn`), the phone vibrates and a chime plays unless muted (`megadraft-mute` in localStorage).
+   - A selection (`ui.sel`) belongs to one room and pool (`ui.selKey`) and is dropped once the item is taken.
 4. **Attack** (`attackView`): `checkEnd` sets `armyUntil` = now + 3 min (`ARMY_MS`). A countdown shows on the room page and in the builder, and the builder locks when it reaches 0. The link can still be copied.
    Also on this page: both rosters, "Build army link", a results form (stars, %, seconds left; `winner` compares them in that order), rematch, and close room.
 
@@ -135,7 +142,7 @@ Every category is dealt purely at random with a plain shuffle. There's no air/gr
 - In a room, only that player's drafted troops, spells and epics are offered, for the army and the Clan Castle. Regular and super troops sit in separate sections.
 - Siege machines never go in the army. In a room, the drafted siege is placed in the Clan Castle automatically and can't be removed.
 - Heroes: 4 fixed slots. Tap an empty slot to choose a hero. Tap a filled slot to pick 2 equipment and a pet from icon grids, change the hero, or remove it. Heroes, pets (one per hero) and common equipment are free.
-- `CAP[th]` = [army camps, spells, CC troops, CC spells, CC sieges]. TH18 = 352 / 11 / 55 / 4 / 2 (from Mikhail). TH12-17 were researched in 2026-11 (coc.guide, cocmap, clasher.us); TH16+ allow 2 CC sieges.
+- `CAP[th]` = [army camps, spells, CC troops, CC spells, CC sieges]. TH18 = 352 / 11 / 55 / 4 / 2 (from Mikhail). TH19 (added 2026-11-24) = 352 / 11 / 60 / 4 / 2: camps unchanged per Mikhail, CC 60 from CC level 15; CC spells and sieges are assumed equal to TH18. TH12-17 were researched in 2026-11 (coc.guide, cocmap, clasher.us); TH16+ allow 2 CC sieges.
 - The army itself takes 1 siege. The saved army lives in localStorage per room and seat.
 - `armyLink` builds `https://link.clashofclans.com/en?action=CopyArmy&army=` + `h<heroes>` `i<CC troops>` `d<CC spells>` `u<troops incl. siege>` `s<spells>`. Units are written `countxaid`, joined by `-`.
   - A hero is written `heroAid[p<petAid>][e<eq1>_<eq2>]`, and heroes are joined by `-`.

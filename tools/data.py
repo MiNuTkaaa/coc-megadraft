@@ -9,7 +9,8 @@ for b in load('buildings'):
         bth[b['name']]={l['level']:l['required_townhall'] for l in b['levels']}
 def slug(s): return re.sub(r'[^a-z0-9]+','_',s.lower().replace("'",'')).strip('_')
 items=[]; paths=[]
-troops=[t for t in load('troops') if t.get('village')=='home' and not t.get('is_seasonal')]
+# Squads (Squad Barracks) are left out of the draft for now.
+troops=[t for t in load('troops') if t.get('village')=='home' and not t.get('is_seasonal') and t.get('production_building') in bth]
 byid={t['_id']:t for t in troops}
 def th_of(t): return bth[t['production_building']][t['production_building_level']]
 for t in troops:

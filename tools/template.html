@@ -106,7 +106,9 @@ label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; colo
 @media (prefers-reduced-motion: no-preference) { .dock.mine { animation: pulse 1.6s ease-in-out infinite } @keyframes pulse { 50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent) 10%, transparent), 0 8px 30px rgba(0,0,0,.25) } } }
 body.hasdock .wrap { padding-bottom: 120px }
 .rules { font-size: 14px; line-height: 1.5 }
-.rules ol { margin: 6px 0 0; padding-left: 20px } .rules li { margin: 3px 0 }
+.rcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 8px; margin-top: 8px }
+.rcard { background: #fff; border-radius: 12px; padding: 9px 12px 10px; border-top: 4px solid var(--cc, var(--hacc)); box-shadow: 0 2px 0 rgba(15,24,64,.08), 0 4px 12px rgba(15,24,64,.08); display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.rcard b { font-size: 15px; line-height: 1.25 } .rcard span { font-size: 13px; line-height: 1.4; color: var(--muted) }
 .rules summary, details > summary { cursor: pointer }
 .lacks { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; margin-top: 8px }
 .lacks .hg { border: 1px solid var(--line); border-radius: 9px; padding: 6px 8px }
@@ -248,7 +250,6 @@ label.f { font-weight: 600 }
 .lockbar { background: #f4f6ff; border-top: 0; box-shadow: 0 -10px 30px rgba(0,4,30,.4) }
 /* lobby */
 .lacks .hg { border: 0; background: #fff; border-radius: 14px; padding: 8px 10px; box-shadow: 0 2px 0 rgba(15,24,64,.08), 0 4px 12px rgba(15,24,64,.08) }
-.rules li::marker { font-weight: 700; color: var(--hacc) }
 /* notes and toasts */
 .note { border-radius: 14px; padding: 10px 14px; font-size: 13px; background: var(--panel2) }
 .toast { background: var(--hyou); color: var(--hdark); border-radius: 12px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,4,30,.4) }
@@ -322,6 +323,35 @@ input, select { font-weight: 500 }
 .cr-go:disabled { opacity: .5 }
 @media (max-width: 1000px) { .cr-grid { grid-template-columns: 1fr } .cr-side { position: static } }
 @media (max-width: 620px) { .cr-names, .cr-steps { grid-template-columns: 1fr } .cr-th { gap: 6px; flex-wrap: nowrap } .cr-th button { width: auto; flex: 1 1 0; min-width: 0; height: 42px; font-size: 14px } .cr-head h2 { font-size: 24px } }
+
+
+/* my rooms */
+.hmine .rh { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:10px }
+.hmine .rh h2 { font:22px var(--hdisp); margin:0; color:#fff } .hmine .rh span { color:var(--hmut); font-size:13px }
+.hcards { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px }
+.hcard { position:relative; display:flex; flex-direction:column; gap:7px; background:var(--hpage); color:var(--hdark); text-decoration:none; border-radius:18px; padding:14px 16px 12px; box-shadow:0 10px 26px rgba(0,4,30,.45); transition:transform .15s }
+.hcard:hover { transform:translateY(-3px) }
+.hcard .hcn { font:18px/1.1 var(--hdisp) }
+.hcard small { color:var(--hdark2); font-size:12.5px }
+.hcard .hsnake { min-width:0 }
+.hcard.turn { box-shadow:0 0 0 4px var(--hyou), 0 10px 26px rgba(0,4,30,.45) }
+.hturn { position:absolute; top:-10px; right:14px; font:12px/1 var(--hdisp); background:var(--hyou); color:var(--hdark); padding:6px 9px; border-radius:8px; transform:rotate(3deg); box-shadow:0 3px 0 var(--hyou-sh) }
+@media (prefers-reduced-motion:no-preference) { .hcard.turn { animation:hturnpulse 1.4s ease-in-out infinite } @keyframes hturnpulse { 50% { box-shadow:0 0 0 8px rgba(255,201,40,.35), 0 10px 26px rgba(0,4,30,.45) } } }
+.hwatch { display:inline-block; margin-top:10px; font:16px/1 var(--hdisp); background:var(--hyou); color:var(--hdark); text-decoration:none; padding:12px 26px; border-radius:14px; box-shadow:0 4px 0 var(--hyou-sh) }
+.hwatch:hover { filter:brightness(1.05) } .hwatch:active { transform:translateY(2px); box-shadow:0 2px 0 var(--hyou-sh) }
+.face .cl { text-align:center }
+/* your turn */
+.yturn { position:fixed; left:50%; top:38%; transform:translate(-50%,-50%) rotate(-3deg); z-index:30; pointer-events:none; text-align:center; background:var(--hyou); color:var(--hdark); padding:22px 38px 18px; border-radius:24px; box-shadow:0 8px 0 var(--hyou-sh), 0 30px 80px rgba(0,4,30,.6); animation:ytin 1.9s cubic-bezier(.2,.9,.3,1.2) both }
+.yturn b { display:block; font:clamp(34px,8vw,64px)/1 var(--hdisp) } .yturn span { display:block; margin-top:6px; font-weight:600 }
+@keyframes ytin { 0% { opacity:0; transform:translate(-50%,-50%) rotate(-3deg) scale(.6) } 12% { opacity:1; transform:translate(-50%,-50%) rotate(-3deg) scale(1.04) } 20% { transform:translate(-50%,-50%) rotate(-3deg) scale(1) } 82% { opacity:1 } 100% { opacity:0; transform:translate(-50%,-60%) rotate(-3deg) scale(.96) } }
+body.myturn::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:4; box-shadow:inset 0 0 0 5px var(--hyou), inset 0 0 60px rgba(255,201,40,.35) }
+@media (prefers-reduced-motion:no-preference) { body.myturn::after { animation:edgeglow 1.6s ease-in-out infinite } @keyframes edgeglow { 50% { box-shadow:inset 0 0 0 5px var(--hyou), inset 0 0 110px rgba(255,201,40,.5) } } }
+@media (prefers-reduced-motion:reduce) { .yturn { animation:none } }
+.dock .snd { width:40px; height:40px; padding:0; display:grid; place-items:center; box-shadow:none } .dock .snd svg { width:22px; height:22px }
+.linkbtn { display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.1) !important; color:#fff }
+.linkbtn svg { width:17px; height:17px }
+.invite { display:grid; gap:8px; margin-top:6px } .invite .row { flex-wrap:nowrap } .invite input { flex:1; min-width:0; font-family:var(--mono); font-size:12px }
+.htable tr.sel td { background:#e6ecff } .htable tr.sel td:first-child { box-shadow:inset 4px 0 0 var(--hacc) }
 
 /* ---------- home: sticker album, live-first ---------- */
 body { --hg:#101c5c; --hbar:#0a134a; --hink:#fff; --hmut:#aab6f0; --hpage:#f4f6ff; --hslot:#dfe5fb; --hslot2:#d0d8f8; --hline:#aab8ee;
@@ -467,7 +497,7 @@ const BYID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 const CATS = [
   { k: "troop", label: "Troops" }, { k: "super", label: "Super troops" },
   { k: "spell", label: "Spells" }, { k: "siege", label: "Siege machines" }, { k: "epic", label: "Epic equipment" }];
-const TH_LEVELS = [12, 13, 14, 15, 16, 17, 18];
+const TH_LEVELS = [12, 13, 14, 15, 16, 17, 18, 19];
 const EPICS_PER_HERO = 2;
 const DEFAULT_SETTINGS = { troops: 7, supers: 2, spells: 4, sieges: 1, epics: 4, timer: 20 };
 const EPICS = ITEMS.filter(i => i.c === "epic");
@@ -476,7 +506,7 @@ const PETBY = Object.fromEntries(PETS.map(p => [p.id, p]));
 // Army capacity by Town Hall. These are estimates you can change in the builder.
 // Max capacity per Town Hall: [army camps, spells, Clan Castle troops, Clan Castle spells, Clan Castle siege machines].
 // TH18 from Mikhail; TH12-17 researched on coc.guide, cocmap and clasher.us (2026-11). The army itself always takes 1 siege machine.
-const CAP = { 12: [280, 11, 40, 2, 1], 13: [300, 11, 45, 2, 1], 14: [300, 11, 45, 3, 1], 15: [320, 11, 50, 3, 1], 16: [320, 11, 50, 3, 2], 17: [340, 11, 55, 3, 2], 18: [352, 11, 55, 4, 2] };
+const CAP = { 12: [280, 11, 40, 2, 1], 13: [300, 11, 45, 2, 1], 14: [300, 11, 45, 3, 1], 15: [320, 11, 50, 3, 1], 16: [320, 11, 50, 3, 2], 17: [340, 11, 55, 3, 2], 18: [352, 11, 55, 4, 2], 19: [352, 11, 60, 4, 2] };  // TH19: CC level 15 holds 60; camps unchanged (Mikhail); CC spells/sieges assumed as TH18
 // Pool follows the picks: about 1.5x what both players draft (at least 2 spare), 1.25x for epics.
 // With the defaults (7 troops, 2 supers, 4 spells, 1 siege, 4 epics) that is 15 / 6 / 12 / 4 / 10.
 const want = (n, f = 1.5) => n ? Math.max(Math.ceil(f * n), n + 2) : 0;
@@ -495,7 +525,25 @@ const inPreview = r => !!r.previewUntil && !r.paused && now() < r.previewUntil;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const img = (it, cls = "pic") => `<img class="${cls}" src="${it.img}" alt="" loading="lazy" decoding="async">`;
 const other = s => s === "A" ? "B" : "A";
-const now = () => Date.now();
+// Shared clock. Every device reads the server's time (the HTTP Date header of this page) and keeps its offset,
+// so a phone whose clock is a few seconds off still sees the same timer, preview and deadlines as everyone else.
+const clock = { offset: 0, synced: false };
+const now = () => Date.now() + clock.offset;
+async function syncClock() {
+  let best = null;
+  for (let n = 0; n < 4; n++) {
+    try {
+      const t0 = performance.now(), res = await fetch(location.href.split("#")[0] + (location.search ? "&" : "?") + "clock=" + Math.random(), { method: "HEAD", cache: "no-store" });
+      const t1 = performance.now(), d = Date.parse(res.headers.get("date") || "");
+      if (!isFinite(d)) continue;
+      // the header has whole seconds, so the server's time is somewhere in [d, d + 1000): aim for the middle
+      const off = d + 500 - (Date.now() - (t1 - t0) / 2), rtt = t1 - t0;
+      if (!best || rtt < best.rtt) best = { off, rtt };
+    } catch (e) {}
+  }
+  if (best && Math.abs(best.off) > 750) { clock.offset = Math.round(best.off); }
+  clock.synced = true;
+}
 const CLIENT = Math.random().toString(36).slice(2);
 function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v) } catch (e) { return null } }
 
@@ -776,7 +824,7 @@ function draw() {
   mode.textContent = Store.live ? "Live rooms" : "This device only";
   mode.title = Store.backend === "firebase" ? "Rooms are stored on the room server" : "";
   mode.className = "mode" + (Store.live ? " live" : "");
-  document.getElementById("lockbar").hidden = true; document.body.classList.remove("hasdock"); document.title = "Megadraft Board";
+  document.getElementById("lockbar").hidden = true; document.body.classList.remove("hasdock", "myturn"); document.title = "Megadraft Board";
   const r = route();
   document.body.classList.toggle("home", r.v === "home");
   if (r.v === "admin") return renderAdmin();
@@ -805,12 +853,15 @@ function roomRow([id, r], cta) {
 /* ---------- home ---------- */
 // The home leads with one draft: a live one (yours first), else the last finished one, else an empty board.
 const roomActivity = r => Math.max(r.turnStart || 0, r.createdAt || 0, ...(r.picks || []).map(p => p.at || 0));
+const isMine = r => !Store.live || mySeats(r).length > 0 || r.hostUid === Store.uid;
+// The preview at the top shows other people's drafts only: yours live in the My rooms section.
 function featured(all) {
+  all = all.filter(([, r]) => !isMine(r));
   const sel = ui.hsel && all.find(([id]) => id === ui.hsel);
   if (sel) { const r = sel[1]; return { kind: r.phase === "draft" ? "live" : r.phase === "lobby" ? "lobby" : "last", e: sel, picked: true } }
   const byAct = list => list.slice().sort((a, b) => roomActivity(b[1]) - roomActivity(a[1]))[0];
   const live = all.filter(([, r]) => r.phase === "draft");
-  if (live.length) { const mine = live.filter(([, r]) => Store.live && mySeats(r).length); return { kind: "live", e: byAct(mine.length ? mine : live) } }
+  if (live.length) return { kind: "live", e: byAct(live) };
   const ended = all.filter(([, r]) => (r.phase === "attack" || r.phase === "done") && r.picks.length);
   if (ended.length) return { kind: "last", e: byAct(ended) };
   return { kind: "none", e: ["", null] };
@@ -857,10 +908,11 @@ function heroHTML(f) {
   const [id, r] = f.e, c = clockParts(f);
   const tag = { live: `<span class="tag">Live</span>`, last: `<span class="tag last">${f.picked ? (r.phase === "attack" ? "Attacks" : "Finished") : "Last draft"}</span>`, lobby: `<span class="tag ex">${r.players.B ? "Getting ready" : "Open seat"}</span>` }[f.kind];
   const sub = `TH${r.th} · ${r.settings.timer ? r.settings.timer + " s a pick" : "no timer"}${r.practice ? " · practice" : ""}`;
-  return `<div class="fh">${tag}<h2>${esc(r.name)}</h2><span class="sub">${sub}</span>${id ? (([k, l]) => `<a class="go2 hgo ${k}" href="#r-${id}">${l === "Watch" ? "Watch live" : l === "View" ? "View room" : l === "Open" ? "Open room" : "Join"}</a>`)(roomAction(id, r)) : ""}${f.picked ? `<button type="button" class="go2 hback" data-hclear>Unpin</button>` : ""}</div>
+  const watch = id && !isMine(r) ? `<a class="hwatch" href="#r-${id}">Watch</a>` : "";
+  return `<div class="fh">${tag}<h2>${esc(r.name)}</h2><span class="sub">${sub}</span></div>
   <div class="face">${seatPage(r, "A")}
     <div class="cl"><div class="hclock"><svg viewBox="0 0 180 180" aria-hidden="true"><circle cx="90" cy="90" r="84" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="8"/><circle id="hring" cx="90" cy="90" r="84" fill="none" stroke="${f.kind === "live" ? "#ff6a55" : "#ffc928"}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${RING}" stroke-dashoffset="${RING * (1 - Math.max(0, Math.min(1, c.frac)))}"/></svg>
-      <div class="disc"><div><b id="hbig" class="${c.sm ? "sm" : ""}">${c.big}</b><small id="hsmall">${c.small}</small></div></div></div><div class="picking" id="hline">${c.line}</div></div>
+      <div class="disc"><div><b id="hbig" class="${c.sm ? "sm" : ""}">${c.big}</b><small id="hsmall">${c.small}</small></div></div></div><div class="picking" id="hline">${c.line}</div>${watch}</div>
     ${seatPage(r, "B")}</div>`;
 }
 function roomState(r) {
@@ -885,14 +937,48 @@ function roomAction(id, r) {
   if (r.phase === "lobby" && !r.players.B) return ["join", "Join"];
   return ["watch", r.phase === "draft" || r.phase === "lobby" ? "Watch" : "View"];
 }
+// One of my rooms: the whole card is the link back in, flagged when it's my turn.
+let audioCtx = null;
+function chime() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    [[784, 0], [1175, .12]].forEach(([f, d]) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "triangle"; o.frequency.value = f; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(.18, t + d + .02); g.gain.exponentialRampToValueAtTime(.001, t + d + .35);
+      o.start(t + d); o.stop(t + d + .4);
+    });
+  } catch (e) {}
+}
+function announceTurn() {
+  document.querySelector(".yturn")?.remove();
+  const el = document.createElement("div"); el.className = "yturn"; el.setAttribute("role", "status"); el.innerHTML = "<b>Your turn</b><span>Pick an item, then lock it in</span>";
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1900);
+  try { navigator.vibrate?.([140, 70, 140]) } catch (e) {}
+  if (ls("megadraft-mute") !== "1") chime();
+}
+const roomLink = id => location.href.split("#")[0].split("?")[0] + "#r-" + id;
+async function copyText(t, ok) {
+  try { await navigator.clipboard.writeText(t); toast(ok) }
+  catch (e) { const i = document.createElement("textarea"); i.value = t; i.style.position = "fixed"; i.style.opacity = "0"; document.body.appendChild(i); i.select(); const done = document.execCommand("copy"); i.remove(); toast(done ? ok : "Copy is blocked here. The link is " + t) }
+}
+function myCard([id, r]) {
+  const [st, lbl] = roomState(r), me = mySeats(r), opp = me.includes("A") ? "B" : "A";
+  const myTurn = Store.live && r.phase === "draft" && !inPreview(r) && me.includes(turnSeat(r));
+  const vs = r.players[opp] ? `vs ${esc(r.players[opp].name)}` : "Waiting for an opponent";
+  return `<a class="hcard ${myTurn ? "turn" : ""}" href="#r-${id}">${myTurn ? `<span class="hturn">Your turn</span>` : ""}
+    <span class="hcn">${esc(r.name)}</span><small><span class="hst ${st}">${lbl}</span>${r.practice ? `<span class="hst prac">Practice</span>` : ""}${vs} · TH${r.th}</small>
+    ${roomSnake(r)}<small class="hci">${roomInfo(r)}</small></a>`;
+}
 function homeRow([id, r]) {
-  const mine = !Store.live || mySeats(r).length > 0 || r.hostUid === Store.uid;
+  const mine = isMine(r);
   const [st, lbl] = roomState(r);
   const A = r.players.A?.name || "?", B = r.players.B?.name;
   const [ak, al] = roomAction(id, r), act = `<a class="hbtn ${ak}" href="#r-${id}">${al}</a>`;
   const del = Store.isAdmin ? `<button type="button" class="hbtn hdel" data-hdel="${id}">Delete</button>` : "";
   return `<tr class="${mine ? "mine" : ""} ${ui.hsel === id ? "sel" : ""}" data-hsel="${id}"><td style="width:70px"><div class="hduo"><i>${esc(A[0].toUpperCase())}</i><i class="${B ? "" : "empty"}">${B ? esc(B[0].toUpperCase()) : "?"}</i></div></td>
-    <td class="nm"><button type="button" class="hpick" data-hsel="${id}" aria-label="Show ${esc(r.name)} at the top">${esc(r.name)}</button><small><span class="hst ${st}">${lbl}</span>${r.practice ? `<span class="hst prac">Practice</span>` : ""}${esc(A)}${B ? " vs " + esc(B) : ""} · TH${r.th}</small></td>
+    <td class="nm"><button type="button" class="hpick" data-hsel="${id}" aria-label="${ui.hsel === id ? "Stop previewing" : "Preview"} ${esc(r.name)} at the top" aria-pressed="${ui.hsel === id}">${esc(r.name)}</button><small><span class="hst ${st}">${lbl}</span>${r.practice ? `<span class="hst prac">Practice</span>` : ""}${esc(A)}${B ? " vs " + esc(B) : ""} · TH${r.th}</small></td>
     <td class="sn">${roomSnake(r)}<small>${roomInfo(r)}</small></td>
     <td class="hact">${act}${del}</td></tr>`;
 }
@@ -902,36 +988,36 @@ function renderHome() {
   if (ui.hsel && !f.picked) ui.hsel = null;
   const hf = ui.hf || "all";
   const isOpen = ([, r]) => r.phase === "lobby" && !r.players.B, isLive = ([, r]) => r.phase === "draft" || r.phase === "attack";
-  const mineFirst = all.slice().sort((a, b) => (Store.live ? (mySeats(b[1]).length > 0) - (mySeats(a[1]).length > 0) : 0));
-  const shown = mineFirst.filter(e => e[0] !== ui.hsel).filter(e => hf === "open" ? isOpen(e) : hf === "live" ? isLive(e) : true).slice(0, 30);
-  const nOpen = all.filter(isOpen).length, nLive = all.filter(isLive).length;
+  const mine = all.filter(([, r]) => isMine(r)).sort((a, b) => roomActivity(b[1]) - roomActivity(a[1])), others = all.filter(([, r]) => !isMine(r));
+  const shown = others.filter(e => hf === "open" ? isOpen(e) : hf === "live" ? isLive(e) : true).slice(0, 30);
+  const nOpen = others.filter(isOpen).length, nLive = others.filter(isLive).length;
   const leg = [["troop", "Troop"], ["super", "Super troop"], ["spell", "Spell"], ["siege", "Siege"], ["epic", "Epic equipment"]].map(([c, l]) => `<span><i style="background:var(--c-${c})"></i>${l}</span>`).join("") + `<span><i style="background:var(--hdark)"></i>On the clock</span>`;
-  const empty = !all.length ? `<div class="hempty"><b>No rooms yet</b>Create the first one, or warm up with a practice draft against the bot.</div>`
-    : !shown.length && ui.hsel ? `<div class="hempty"><b>Pinned above</b>The only room in this list is pinned at the top. Unpin it to put it back.</div>`
+  const empty = !others.length ? `<div class="hempty"><b>${all.length ? "No one else's rooms yet" : "No rooms yet"}</b>Create one, or warm up with a practice draft against the bot.</div>`
     : !shown.length ? `<div class="hempty"><b>Nothing here right now</b>${hf === "open" ? "No one is waiting for an opponent." : "No drafts or attacks are running."}</div>` : "";
   app.innerHTML = `<div class="h-stage">
-    <section id="hfeat" aria-label="Featured draft">${heroHTML(f)}</section>
+    ${mine.length ? `<section class="hmine" aria-labelledby="hmt"><div class="rh"><h2 id="hmt">My rooms</h2><span>Tap a room to go back in</span></div><div class="hcards">${mine.map(myCard).join("")}</div></section>` : ""}
+    <section id="hfeat" aria-label="Preview">${heroHTML(f)}</section>
     <div class="acts">
       <a class="ac main" href="#create"><img src="icons/fireball.webp" alt=""><div><strong>Create room</strong><span>TH18 · 20 s a pick · 7 / 4 / 1 / 4</span></div></a>
       <a class="ac" href="#join"><img src="icons/hog_rider.webp" alt=""><div><strong>Join</strong><span>${nOpen} room${nOpen === 1 ? "" : "s"} waiting for an opponent</span></div></a>
       <a class="ac" href="#create" data-practice><img src="icons/battle_drill.webp" alt=""><div><strong>Practice</strong><span>Draft against the bot</span></div></a>
     </div>
     <section class="hrooms" aria-labelledby="hrt">
-      <div class="rh"><h2 id="hrt">All rooms</h2><span>${Store.live ? "Updated live · anyone can watch" : "On this device only"}</span>
-        <div class="hf">${[["all", `All ${all.length}`], ["open", `Open seats ${nOpen}`], ["live", `Live ${nLive}`]].map(([k, l]) => `<button type="button" data-hf="${k}" class="${hf === k ? "on" : ""}">${l}</button>`).join("")}</div></div>
+      <div class="rh"><h2 id="hrt">${mine.length ? "Other rooms" : "All rooms"}</h2><span>${Store.live ? "Tap a room to preview it at the top" : "On this device only"}</span>
+        <div class="hf">${[["all", `All ${others.length}`], ["open", `Open seats ${nOpen}`], ["live", `Live ${nLive}`]].map(([k, l]) => `<button type="button" data-hf="${k}" class="${hf === k ? "on" : ""}">${l}</button>`).join("")}</div></div>
       ${empty || `<div class="hscroll"><table class="htable"><tbody>${shown.map(homeRow).join("")}</tbody></table></div>`}
       <div class="hleg">${leg}</div>
     </section>
     <p class="hnote">${Store.backend === "firebase" ? "Rooms are stored on the server and update live for everyone. Send friends this page's link to play. Rooms older than a day drop off the list." : Store.backend === "claude" ? "Rooms update live for everyone on this page. To pick in a draft you must be signed in to Claude with edit access to this page; anyone else can watch." : "No room server is set up, so rooms stay on this device and one screen plays both seats."}</p>
   </div>`;
   app.querySelectorAll("[data-hf]").forEach(b => b.onclick = () => { ui.hf = b.dataset.hf; render(true) });
-  // tap a room to show its board at the top
+  // tap a room to preview its board at the top; tap it again to stop
   app.querySelectorAll("tr[data-hsel]").forEach(tr => tr.onclick = e => {
     if (e.target.closest("a, .hdel")) return;
+    if (ui.hsel === tr.dataset.hsel) { ui.hsel = null; render(true); return }
     ui.hsel = tr.dataset.hsel; render(true);
     document.getElementById("hfeat").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   });
-  const hc = app.querySelector("[data-hclear]"); if (hc) hc.onclick = () => { ui.hsel = null; render(true) };
   app.querySelectorAll("[data-hdel]").forEach(b => b.onclick = () => confirmInline(b, "Delete?", async () => { try { await Store.remove(b.dataset.hdel); toast("Room deleted") } catch (e) { toast("Couldn't delete: " + (e.code || e.message)) } }));
   const pr = app.querySelector("[data-practice]"); if (pr) pr.onclick = () => { ui.practice = true };
 }
@@ -952,7 +1038,7 @@ setInterval(() => {
 /* ---------- create ---------- */
 function renderCreate() {
   // The form lives in ui.cr so live re-renders (a room changing elsewhere) never reset what the host typed.
-  if (!ui.cr) { ui.cr = { me: ls("megadraft-name") || "", name: "", th: 18, ...DEFAULT_SETTINGS, bot: !!ui.practice }; ui.practice = false }
+  if (!ui.cr) { ui.cr = { me: ls("megadraft-name") || "", name: "", th: 19, ...DEFAULT_SETTINGS, bot: !!ui.practice }; ui.practice = false }
   const c = ui.cr, settings = { troops: c.troops, supers: Math.min(2, c.supers, c.troops), spells: c.spells, sieges: c.sieges, epics: c.epics, timer: c.timer };
   const size = autoSize(c.th, settings), prob = poolProblem(c.th, size, settings);
   const LIM = { troops: [1, 12, 1], supers: [0, Math.min(2, c.troops), 1], spells: [0, 8, 1], sieges: [0, 2, 1], epics: [0, 8, 1], timer: [0, 120, 5] };
@@ -1090,10 +1176,12 @@ function renderRoom(id) {
   let body = r.phase === "lobby" ? lobbyView(id, r) : r.phase === "draft" ? draftView(id, r) : attackView(id, r);
   app.innerHTML = `
     <div class="row" style="margin-bottom:8px"><a href="#" class="small muted">← All rooms</a><span class="spacer"></span>
+      <button type="button" class="linkbtn" data-copylink="${id}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3.2-3.2a4.5 4.5 0 0 0-6.4-6.4L12 5.6M14 10a4.5 4.5 0 0 0-6.4 0l-3.2 3.2a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Copy room link</button>
       ${canDelete ? `<button type="button" class="danger" id="del">Delete room</button>` : ""}</div>
     <div class="row" style="margin-bottom:10px"><span class="th">TH${r.th}</span><h2 style="margin:0">${esc(r.name)}</h2></div>
     <div class="steps">${steps}</div>
     ${body}`;
+  app.querySelectorAll("[data-copylink]").forEach(b => b.onclick = () => copyText(roomLink(id), "Room link copied. Anyone who opens it lands in this room."));
   const del = document.getElementById("del");
   if (del) del.onclick = () => confirmInline(del, "Delete for everyone?", async () => { await Store.remove(id); location.hash = "" });
   if (r.phase === "lobby") bindLobby(id, r);
@@ -1136,22 +1224,19 @@ function freeLine(r) {
 }
 
 function rulesHTML(r) {
-  const st = r.settings, m = minsOf(st);
-  return `<ol>
-    <li><b>Snake draft.</b> A coin flip decides who picks first. After that each player takes two picks in a row. Every item can be taken by only one player.</li>
-    <li><b>Each player drafts</b> ${st.troops} troops (at most ${st.supers} super), ${st.spells} spells, ${st.sieges} siege machine${st.sieges === 1 ? "" : "s"} and ${st.epics} epic equipment (at most ${EPICS_PER_HERO} per hero).</li>
-    <li><b>You attack only with what you drafted.</b> Every troop, super troop, spell and siege machine in your army must be one of your picks. <b>This includes your Clan Castle:</b> no troop, spell or siege machine that you didn't draft, from anyone. A spell you didn't draft can't be used at all. You can bring any number of each drafted troop or spell that fits your camps.</li>
-    <li><b>Free for everyone:</b> all heroes (bring up to 4), all pets and all common equipment. Epic equipment must be drafted.</li>
-    <li><b>Use any of your picks, not all of them.</b> You don't have to use every troop, spell, siege machine or epic you drafted, but everything you do use must be one of your own picks. Drafting something just to keep it from your opponent is allowed; that's part of the strategy.</li>
-    <li><b>Board preview:</b> when the pool is dealt, both players get ${PREVIEW_MS / 1000} seconds to look at it before the first pick.</li>
-    <li><b>Epic equipment:</b> the pool only deals epics that both players own (up to ${r.size?.epic ?? 10}; if fewer qualify, all of them).</li>
-    <li><b>New pool:</b> during the draft either player can ask for a new pool. It changes only if the other player accepts, at most ${MAX_REROLLS} times per room, and the draft restarts from the first pick.</li>
-    <li><b>Timer:</b> ${st.timer ? `${st.timer} seconds per pick. If it runs out, a random legal item is picked for you and marked with *.` : "none in this room."}</li>
-    <li><b>Epic race:</b> both players can take up to ${st.epics} epics. If the pool runs out of epics you can still take, each of your empty epic slots becomes a <b>flex pick</b>: one more troop or spell, over the usual limit. The super troop, siege and 2-per-hero limits don't change, so both players always make the same number of picks.</li>
-    <li><b>Finish early:</b> once you have at least ${m.troops} troops, ${m.spells} spells, ${m.sieges} siege and ${m.epics} epic equipment, you can press Finish drafting. Your remaining turns are skipped and you can't pick again.</li>
-    <li><b>Army building:</b> after the draft you have ${ARMY_MS / 60000} minutes to build your army on the site. Then the builder locks, and you copy the link into the game.</li>
-    <li><b>Attacks:</b> each player attacks the other's own base in a friendly challenge, both within 15 minutes. Stars win, then destruction %, then time left.</li>
-  </ol>`;
+  const st = r.settings, m = minsOf(st), card = (h, d, c = "") => `<div class="rcard"${c ? ` style="--cc:var(--c-${c})"` : ""}><b>${h}</b><span>${d}</span></div>`;
+  return `<div class="rcards">
+    ${card("Snake draft", `Coin flip for first pick, then two picks each in turn. You get ${PREVIEW_MS / 1000} s to study the pool first.`)}
+    ${card("What you draft", `${st.troops} troops (max ${st.supers} super), ${st.spells} spells, ${st.sieges} siege and ${st.epics} epics (max ${EPICS_PER_HERO} per hero).`, "troop")}
+    ${card("Your picks, your army", "Attack only with what you drafted, Clan Castle included. You don't have to use all of it.", "super")}
+    ${card("Free for everyone", "All heroes, pets and common equipment.")}
+    ${card("Epic race", "Only epics you both own are dealt. Run out of ones you can take, and each empty epic slot becomes a flex pick: one more troop or spell.", "epic")}
+    ${card("Timer", st.timer ? `${st.timer} s per pick. Run out and a random legal item is picked for you, marked *.` : "None in this room.", "spell")}
+    ${card("New pool", `Either player can ask, the other must accept. Up to ${MAX_REROLLS} per room.`)}
+    ${card("Finish early", `Once you have ${m.troops} troops, ${m.spells} spells, ${m.sieges} siege and ${m.epics} epics, you can skip your remaining turns.`)}
+    ${card("Build your army", `${ARMY_MS / 60000} minutes after the draft, then copy the link into the game.`, "siege")}
+    ${card("Winner", "Most stars, then destruction %, then time left.")}
+  </div>`;
 }
 const myLacks = () => { try { return JSON.parse(ls("megadraft-lacks") || "[]") } catch (e) { return [] } };
 function lacksPicker(prefix, selected) {
@@ -1171,7 +1256,7 @@ function lobbyView(id, r) {
   const status = p => p.ready ? `<span class="pill attack">Ready</span>` : `<span class="pill">Not ready</span>`;
   const card = s => {
     const p = r.players[s];
-    if (!p) return `<section class="panel roster B"><div class="head"><span class="name seatB">Open seat</span></div>${joinBox || `<div class="small muted">Waiting for someone to join.</div>`}</section>`;
+    if (!p) return `<section class="panel roster B"><div class="head"><span class="name seatB">Open seat</span></div>${joinBox || (seated ? `<div class="invite"><div class="small muted">Send your opponent this link. It opens straight into this room.</div><div class="row"><input readonly class="linkbox" value="${esc(roomLink(id))}" aria-label="Room link" onfocus="this.select()"><button type="button" class="primary" data-copylink="${id}">Copy link</button></div></div>` : `<div class="small muted">Waiting for someone to join.</div>`)}</section>`;
     const kick = s === "B" && (isHost(r) || canActFor(r, "B")) ? `<button type="button" id="leaveB">${canActFor(r, "B") && !isHost(r) ? "Leave" : "Remove"}</button>` : "";
     return `<section class="panel roster ${s}"><div class="head"><span class="name seat${s}">${esc(p.name)}</span>${s === "A" ? `<span class="pill">Host</span>` : ""}${p.bot ? `<span class="pill">Bot</span>` : ""}<span class="spacer"></span>${status(p)}${kick}</div>${lacksLine(p)}</section>`;
   };
@@ -1227,6 +1312,10 @@ function rosterHTML(r, seat) {
     .filter(g => g[2] > 0).map(([lab, arr, cap, extra]) => `<div class="cat"><div class="lab">${lab}<br><span class="mono">${arr.length}/${cap}</span>${extra ? `<br>${extra}` : ""}</div><div class="slots">${arr.map(chip).join("")}${r.phase !== "draft" || r.done?.[seat] ? "" : lab.startsWith("Epic") && fx.on ? flexes(fx.left) : empties(Math.max(0, cap - arr.length))}</div></div>`).join("");
 }
 function draftView(id, r) {
+  // a selection only lives in its own room and pool, and goes away once the item is taken
+  const selKey = id + ":" + (r.rerolls || 0);
+  if (ui.selKey !== selKey) { ui.sel = null; ui.selKey = selKey }
+  if (ui.sel && (!r.pool.includes(ui.sel) || r.picks.some(p => p.id === ui.sel))) ui.sel = null;
   const i = r.picks.length, N = shownPicks(r), seat = turnSeat(r), next = nextSeat(r);
   const me = mySeats(r), mod = isMod();
   const log = r.picks.map((p, k) => `<div><span class="mono muted">${String(k + 1).padStart(2, "0")}</span> <b class="seat${p.seat}">${esc(r.players[p.seat].name)}</b> took ${esc(BYID[p.id]?.n)}${p.auto ? " <span class='muted'>(auto, timer ran out)</span>" : ""}</div>`).reverse().join("");
@@ -1309,12 +1398,19 @@ function bindDraft(id, r) {
   const forWho = Store.live ? "" : ` <span class="seat${seat}">(${esc(r.players[seat].name)})</span>`;
   bar.hidden = false; document.body.classList.add("hasdock"); bar.className = "dock" + (mine ? " mine" : "");
   const pv = inPreview(r);
+  // your turn: banner, glowing screen edge, vibration and a chime, once each time the turn comes back to you
+  const myTurnNow = mine && !pv && (Store.live || r.practice);
+  document.body.classList.toggle("myturn", myTurnNow);
+  if (myTurnNow && ui.turnMine !== id) announceTurn();
+  ui.turnMine = myTurnNow ? id : null;
+  const muted = ls("megadraft-mute") === "1";
   bar.innerHTML = `<div class="dclock js-clock">${clockText(r)}</div>
     <div style="flex:1;min-width:150px">
       <div class="dwho">${pv ? `Look at the board · <span class="seat${seat}">${esc(r.players[seat].name)}</span> picks first` : mine ? `Your turn${forWho}` : `<span class="seat${seat}">${esc(r.players[seat].name)}</span> is picking`}</div>
       <div class="dsub">${pv ? "Nobody can pick until the clock reaches 0." : it ? `Selected: <b>${esc(it.n)}</b>` : mine ? "Tap an item in the pool, then lock it in." : mySeats(r).length ? (r.done?.[mySeats(r)[0]] ? "You finished drafting." : "Wait for your turn.") : "You're watching."}${next ? ` · next: <span class="seat${next}">${esc(r.players[next].name)}</span>` : " · last pick"}</div>
     </div>
     ${it ? `<button type="button" class="primary" id="lockin" ${pv ? "disabled" : ""}>${pv ? "Picks start soon" : "Lock in"}</button><button type="button" id="cancelSel">Cancel</button>` : ""}
+    <button type="button" class="snd" id="snd" aria-pressed="${!muted}" aria-label="${muted ? "Turn the your-turn sound on" : "Mute the your-turn sound"}" title="${muted ? "Sound off" : "Sound on"}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/>${muted ? `<path d="M16 9.5l5 5m0-5l-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>` : `<path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`}</svg></button>
     ${canFin && !pv ? `<button type="button" id="finishDraft" title="Skip your remaining turns">Finish drafting${Store.live ? "" : ` (${esc(r.players[finSeat].name)})`}</button>` : ""}`;
   document.title = (pv ? "Board preview · " : mine ? "● Your turn · " : "") + "Megadraft Board";
   const li = document.getElementById("lockin");
@@ -1326,6 +1422,7 @@ function bindDraft(id, r) {
     if (!ok) toast("That pick didn't go through because the board changed. Try again."); render(true);
   };
   const c = document.getElementById("cancelSel"); if (c) c.onclick = () => { ui.sel = null; render(true) };
+  const snd = document.getElementById("snd"); if (snd) snd.onclick = () => { const m = ls("megadraft-mute") === "1"; ls("megadraft-mute", m ? "0" : "1"); if (m) chime(); render(true) };
   const fd = document.getElementById("finishDraft");
   if (fd) fd.onclick = () => confirmInline(fd, "Skip the rest of your picks?", async () => {
     const ok = await Store.mutate(id, x => finishSeat(x, finSeat)).catch(() => false);
@@ -1411,7 +1508,7 @@ function renderBuilder(ctx) {
     epicIds = mine.filter(i => i.c === "epic").map(i => i.id);
     key = `megadraft-army-${ctx.id}-${seat}`; title = `${esc(r.players[seat]?.name)}'s army`; back = `#r-${ctx.id}`;
   } else {
-    th = +(ls("megadraft-bth") || 18);
+    th = +(ls("megadraft-bth") || 19);
     troops = ITEMS.filter(i => (i.c === "troop" || i.c === "super") && i.th <= th); spells = eligible(th, "spell"); sieges = eligible(th, "siege");
     epicIds = EPICS.filter(e => !myLacks().includes(e.id)).map(e => e.id);
     key = `megadraft-army-th${th}`; title = "Army builder"; back = "#";
@@ -1531,7 +1628,7 @@ function botChoice(r, legal) {
 }
 
 /* ---------- timer + auto-pick ---------- */
-const autoTried = {};
+const autoTried = {}, seenAt = {};
 function fmt(ms) { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` }
 // army-building countdown (room page and builder)
 setInterval(() => {
@@ -1566,6 +1663,10 @@ setInterval(() => {
   }
   const d = deadline(r); if (!d) return;
   const late = now() - d;
+  // safety net against a wrong clock: this device never auto-picks before it has watched this turn for the whole timer itself
+  const seenKey = rt.id + ":" + i + ":" + k + ":" + r.turnStart;
+  if (!seenAt[seenKey]) seenAt[seenKey] = performance.now();
+  if (performance.now() - seenAt[seenKey] < r.settings.timer * 1000 - 400) return;
   // the picker's own device auto-picks first; the opponent's device covers after 3 s, any viewer after 8 s
   const due = mySeats(r).includes(seat) ? late >= 0 : mySeats(r).length ? late >= 3000 : late >= 8000;
   const key = rt.id + ":" + i + ":" + k;
@@ -1586,5 +1687,5 @@ Store.listeners.push(() => {
   if ((v === "admin" && !Store.isAdmin) || v === "create" || v === "builder" || (v === "army" && document.getElementById("builder"))) return;
   render();
 });
-Store.init().then(() => render(true));
+Promise.all([syncClock(), Store.init()]).then(() => render(true));
 </script>
